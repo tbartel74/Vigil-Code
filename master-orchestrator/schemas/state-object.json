@@ -1,0 +1,315 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Workflow State Object",
+  "description": "Master Orchestrator workflow state management schema",
+  "type": "object",
+  "required": [
+    "workflow_id",
+    "task_id",
+    "user_request",
+    "task_type",
+    "complexity",
+    "agents",
+    "workflow_state",
+    "context"
+  ],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique workflow instance identifier"
+    },
+    "task_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique task identifier"
+    },
+    "user_request": {
+      "type": "string",
+      "description": "Original user request text"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "PATTERN_ADDITION",
+        "PII_ENTITY_ADDITION",
+        "SECURITY_AUDIT",
+        "FALSE_POSITIVE_FIX",
+        "SERVICE_DEPLOYMENT",
+        "API_ENDPOINT_ADDITION",
+        "MORNING_CHECK",
+        "DEPENDENCY_UPGRADE",
+        "INCIDENT_RESPONSE",
+        "REFACTORING"
+      ],
+      "description": "Classified task type"
+    },
+    "complexity": {
+      "type": "string",
+      "enum": [
+        "SINGLE_AGENT",
+        "MULTI_AGENT",
+        "MULTI_AGENT_CROSS_SERVICE",
+        "MULTI_AGENT_PARALLEL"
+      ],
+      "description": "Workflow complexity level"
+    },
+    "agents": {
+      "type": "object",
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "description": "Primary agent responsible for the task"
+        },
+        "supporting": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supporting agents that assist the primary"
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional agents for enhanced functionality"
+        }
+      }
+    },
+    "workflow_state": {
+      "type": "object",
+      "required": [
+        "status",
+        "current_step",
+        "total_steps",
+        "completed_steps",
+        "pending_steps",
+        "checkpoints"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "INITIALIZING",
+            "IN_PROGRESS",
+            "WAITING_USER_INPUT",
+            "COMPLETING",
+            "COMPLETED",
+            "FAILED",
+            "ROLLED_BACK"
+          ]
+        },
+        "current_step": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "completed_steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pending_steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checkpoints": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "agent": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["SUCCESS", "FAILURE", "WARNING", "SKIPPED"]
+              }
+            }
+          }
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": [
+        "files_modified",
+        "services_affected",
+        "verification_required"
+      ],
+      "properties": {
+        "files_modified": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of files modified during workflow"
+        },
+        "services_affected": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "n8n",
+              "presidio-pii-api",
+              "language-detector",
+              "prompt-guard-api",
+              "clickhouse",
+              "grafana",
+              "web-ui-backend",
+              "web-ui-frontend",
+              "proxy"
+            ]
+          },
+          "description": "Services impacted by the workflow"
+        },
+        "verification_required": {
+          "type": "boolean",
+          "description": "Whether manual verification is needed"
+        },
+        "shared_data": {
+          "type": "object",
+          "description": "Data shared between agents",
+          "additionalProperties": true
+        },
+        "extracted_entities": {
+          "type": "object",
+          "properties": {
+            "attack_type": {
+              "type": "string"
+            },
+            "service_name": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string"
+            },
+            "file_paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "agent", "message"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "agent": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "recoverable": {
+            "type": "boolean"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "agent": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rollback_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "checkpoint": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "rollback_instructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "total_duration_ms": {
+          "type": "integer"
+        },
+        "agent_durations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "user_interactions": {
+          "type": "integer"
+        },
+        "retry_count": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
