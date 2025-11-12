@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(do echo \"=== $hash ===\" git log -1 --format=\"%B\" $hash)",
+      "Bash(for agent in vg-*/agent.js)",
+      "Bash(do echo \"=== $agent ===\")",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(node init.js:*)",
+      "Bash(for agent in /Users/tomaszbartel/Documents/Projects/Vigil-Guard/.claude/agents/vg-*/agent.js)",
+      "Bash(node -c \"$agent\")",
+      "Bash(node -c:*)",
+      "Bash(node:*)",
+      "Bash(if [ -f .claude/commands/vg-orchestrate.md ])",
+      "Bash(then head -20 .claude/commands/vg-orchestrate.md)",
+      "Bash(else echo \"File not found\")",
+      "Bash(fi)",
+      "Bash(cat:*)",
+      "Bash(mv:*)",
+      "Bash(for dir in .claude/skills/*/)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Skill(vg-master-orchestrator)",
+      "Bash(docker-compose restart:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr create:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
