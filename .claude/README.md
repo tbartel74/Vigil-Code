@@ -132,185 +132,6 @@ Slash commands for quick access to specific functionality.
 
 ---
 
-## 📊 Real-Time Agent Visibility (.claude-code/)
-
-**NEW:** Agent system now features real-time status tracking via `.claude-code/` directory.
-
-### Directory Structure
-
-```
-.claude-code/
-├── prompt.txt              # Forced system prompt (always loaded by Claude Code)
-├── ui-state.json          # Real-time agent status (updated during execution)
-├── agent-manifest.json    # Agent discovery metadata (static config)
-└── state/                 # Future: per-agent state persistence
-```
-
-### Files
-
-#### 1. `prompt.txt` (Forced Context Loading)
-
-**Purpose:** Ensures agent system context is loaded BEFORE any task execution
-
-**Contents:**
-- Overview of 12 agents (with icons and capabilities)
-- When to use each agent
-- Visibility protocol (emoji indicators)
-- Quick reference commands
-
-**Behavior:**
-- Automatically loaded by Claude Code at conversation start
-- Acts as "first message" prepended to system prompt
-- Guarantees agent system is always accessible
-
-#### 2. `ui-state.json` (Persistent UI State)
-
-**Purpose:** Tracks agent execution history and workflow status in real-time
-
-**Structure:**
-```json
-{
-  "agents": {
-    "vg-test-automation": {
-      "status": "idle|active",
-      "last_execution": "2025-11-12T10:45:23Z",
-      "last_task": "Run test suite",
-      "success_count": 47,
-      "failure_count": 3,
-      "last_error": null,
-      "last_duration_ms": 1200,
-      "icon": "🧪",
-      "description": "Test creation, execution, fixture generation"
-    }
-    // ... 11 more agents
-  },
-  "active_workflow": "PATTERN_ADDITION" | null,
-  "workflow_details": {
-    "name": "PATTERN_ADDITION",
-    "step": 2,
-    "total_steps": 4,
-    "start_time": "2025-11-12T10:45:20Z",
-    "strategy": "SEQUENTIAL"
-  },
-  "last_orchestrator_call": "2025-11-12T10:45:20Z",
-  "agent_system_version": "2.0.1",
-  "conversation_count": 15,
-  "metadata": {
-    "created_at": "2025-11-12T00:00:00Z",
-    "last_updated": "2025-11-12T10:45:23Z",
-    "total_agent_executions": 127
-  }
-}
-```
-
-**Updated By:**
-- `BaseAgent.updateUIState()` - when agent starts/completes execution
-- `ProgressReporter.updateUIState()` - when workflow starts/completes
-- `ProgressReporter.updateWorkflowDetails()` - when workflow step changes
-
-**Gitignore:** ✅ Added to `.gitignore` (runtime-generated, changes frequently)
-
-#### 3. `agent-manifest.json` (Agent Discovery)
-
-**Purpose:** Single source of truth for agent metadata
-
-**Contents:**
-- All 12 agents with full details (capabilities, technologies, status)
-- All 5 workflows with descriptions and estimated durations
-- Skills count and categories
-- Commands count and most used
-- Integration points (message bus, state manager, etc.)
-
-**Used By:**
-- `/status-agents` command
-- Future: Claude Code UI integration
-- Future: Autocomplete suggestions
-
-**Gitignore:** ❌ NOT ignored (static configuration, committed to repo)
-
-### Integration Points
-
-#### BaseAgent Class (`.claude/core/base-agent.js`)
-
-Added methods:
-- `executeWithTracking(task, executionFn)` - Wrapper that auto-tracks execution
-- `updateUIState(updates)` - Updates ui-state.json with agent status
-- Atomic writes (write to .tmp → rename) to prevent race conditions
-- Graceful degradation if `.claude-code/` doesn't exist
-
-#### ProgressReporter Class (`.claude/core/progress-reporter.js`)
-
-Added methods:
-- `updateUIState(updates)` - Updates workflow-level status
-- `updateWorkflowDetails(updates)` - Updates workflow step progress
-- Modified: `startTask()`, `reportStrategy()`, `reportWorkflowStep()`, `completeTask()`, `failTask()` now `async`
-
-### Commands
-
-#### `/status-agents`
-
-**Purpose:** Display real-time status of all 12 agents
-
-**Output:**
-```
-🤖 Vigil Guard Agent System v2.0.1
-
-═══════════════════════════════════════════════════════════════════════════
-
-ACTIVE AGENTS (2):
-🔄 test-automation           Running: "verify_pattern" (3.5s elapsed)
-🔄 workflow-business-logic   Running: "add_pattern" (1.2s elapsed)
-
-IDLE AGENTS (10):
-✅ 🔒 pii-detection
-   Last: "analyze_entity" (5m ago)
-   Success: 23 | Failures: 0
-
-... [8 more agents]
-
-═══════════════════════════════════════════════════════════════════════════
-
-WORKFLOW STATUS:
-🎯 Active Workflow: PATTERN_ADDITION
-   Strategy: SEQUENTIAL
-   Progress: Step 2/4
-   Duration: 5.3s elapsed
-
-═══════════════════════════════════════════════════════════════════════════
-
-SYSTEM STATS:
-• Total Agent Executions: 127
-• Last Updated: 2025-11-12T10:45:23Z (2s ago)
-• Agent System Version: 2.0.1
-• Conversation Count: 15
-
-═══════════════════════════════════════════════════════════════════════════
-```
-
-**Usage:** `/status-agents` (call anytime during conversation)
-
-### Benefits
-
-✅ **Agent Visibility:** 0% → 80% (users see which agents are active)
-✅ **Context Preservation:** 40% → 85% (forced prompt.txt loading)
-✅ **Real-Time Monitoring:** Live status updates in ui-state.json
-✅ **Debugging:** `/status-agents` shows execution history
-✅ **Backward Compatible:** Graceful degradation if `.claude-code/` missing
-
-### Future Enhancements
-
-**Phase 2 (Optional):** tmux status bar wrapper
-- Real-time status bar in terminal
-- Shows active agents/workflow in top bar
-- See `docs/TMUX_STATUS_BAR.md` for implementation
-
-**Phase 3 (Requires Anthropic):** Claude Code UI integration
-- Official status bar API
-- Native UI indicators for agent activity
-- Visual workflow progress
-
----
-
 ## 📚 Documentation
 
 ### Master Orchestrator
@@ -633,6 +454,185 @@ This system is also available as a standalone repository:
 - Complete copy of `.claude/` system
 - Can be developed independently
 - Periodically synced with Vigil Guard
+
+---
+
+## 📊 Real-Time Agent Visibility (.claude-code/)
+
+**NEW:** Agent system now features real-time status tracking via `.claude-code/` directory.
+
+### Directory Structure
+
+```
+.claude-code/
+├── prompt.txt              # Forced system prompt (always loaded by Claude Code)
+├── ui-state.json          # Real-time agent status (updated during execution)
+├── agent-manifest.json    # Agent discovery metadata (static config)
+└── state/                 # Future: per-agent state persistence
+```
+
+### Files
+
+#### 1. `prompt.txt` (Forced Context Loading)
+
+**Purpose:** Ensures agent system context is loaded BEFORE any task execution
+
+**Contents:**
+- Overview of 12 agents (with icons and capabilities)
+- When to use each agent
+- Visibility protocol (emoji indicators)
+- Quick reference commands
+
+**Behavior:**
+- Automatically loaded by Claude Code at conversation start
+- Acts as "first message" prepended to system prompt
+- Guarantees agent system is always accessible
+
+#### 2. `ui-state.json` (Persistent UI State)
+
+**Purpose:** Tracks agent execution history and workflow status in real-time
+
+**Structure:**
+```json
+{
+  "agents": {
+    "vg-test-automation": {
+      "status": "idle|active",
+      "last_execution": "2025-11-12T10:45:23Z",
+      "last_task": "Run test suite",
+      "success_count": 47,
+      "failure_count": 3,
+      "last_error": null,
+      "last_duration_ms": 1200,
+      "icon": "🧪",
+      "description": "Test creation, execution, fixture generation"
+    }
+    // ... 11 more agents
+  },
+  "active_workflow": "PATTERN_ADDITION" | null,
+  "workflow_details": {
+    "name": "PATTERN_ADDITION",
+    "step": 2,
+    "total_steps": 4,
+    "start_time": "2025-11-12T10:45:20Z",
+    "strategy": "SEQUENTIAL"
+  },
+  "last_orchestrator_call": "2025-11-12T10:45:20Z",
+  "agent_system_version": "2.0.1",
+  "conversation_count": 15,
+  "metadata": {
+    "created_at": "2025-11-12T00:00:00Z",
+    "last_updated": "2025-11-12T10:45:23Z",
+    "total_agent_executions": 127
+  }
+}
+```
+
+**Updated By:**
+- `BaseAgent.updateUIState()` - when agent starts/completes execution
+- `ProgressReporter.updateUIState()` - when workflow starts/completes
+- `ProgressReporter.updateWorkflowDetails()` - when workflow step changes
+
+**Gitignore:** ✅ Added to `.gitignore` (runtime-generated, changes frequently)
+
+#### 3. `agent-manifest.json` (Agent Discovery)
+
+**Purpose:** Single source of truth for agent metadata
+
+**Contents:**
+- All 12 agents with full details (capabilities, technologies, status)
+- All 5 workflows with descriptions and estimated durations
+- Skills count and categories
+- Commands count and most used
+- Integration points (message bus, state manager, etc.)
+
+**Used By:**
+- `/status-agents` command
+- Future: Claude Code UI integration
+- Future: Autocomplete suggestions
+
+**Gitignore:** ❌ NOT ignored (static configuration, committed to repo)
+
+### Integration Points
+
+#### BaseAgent Class (`.claude/core/base-agent.js`)
+
+Added methods:
+- `executeWithTracking(task, executionFn)` - Wrapper that auto-tracks execution
+- `updateUIState(updates)` - Updates ui-state.json with agent status
+- Atomic writes (write to .tmp → rename) to prevent race conditions
+- Graceful degradation if `.claude-code/` doesn't exist
+
+#### ProgressReporter Class (`.claude/core/progress-reporter.js`)
+
+Added methods:
+- `updateUIState(updates)` - Updates workflow-level status
+- `updateWorkflowDetails(updates)` - Updates workflow step progress
+- Modified: `startTask()`, `reportStrategy()`, `reportWorkflowStep()`, `completeTask()`, `failTask()` now `async`
+
+### Commands
+
+#### `/status-agents`
+
+**Purpose:** Display real-time status of all 12 agents
+
+**Output:**
+```
+🤖 Vigil Guard Agent System v2.0.1
+
+═══════════════════════════════════════════════════════════════════════════
+
+ACTIVE AGENTS (2):
+🔄 test-automation           Running: "verify_pattern" (3.5s elapsed)
+🔄 workflow-business-logic   Running: "add_pattern" (1.2s elapsed)
+
+IDLE AGENTS (10):
+✅ 🔒 pii-detection
+   Last: "analyze_entity" (5m ago)
+   Success: 23 | Failures: 0
+
+... [8 more agents]
+
+═══════════════════════════════════════════════════════════════════════════
+
+WORKFLOW STATUS:
+🎯 Active Workflow: PATTERN_ADDITION
+   Strategy: SEQUENTIAL
+   Progress: Step 2/4
+   Duration: 5.3s elapsed
+
+═══════════════════════════════════════════════════════════════════════════
+
+SYSTEM STATS:
+• Total Agent Executions: 127
+• Last Updated: 2025-11-12T10:45:23Z (2s ago)
+• Agent System Version: 2.0.1
+• Conversation Count: 15
+
+═══════════════════════════════════════════════════════════════════════════
+```
+
+**Usage:** `/status-agents` (call anytime during conversation)
+
+### Benefits
+
+✅ **Agent Visibility:** 0% → 80% (users see which agents are active)
+✅ **Context Preservation:** 40% → 85% (forced prompt.txt loading)
+✅ **Real-Time Monitoring:** Live status updates in ui-state.json
+✅ **Debugging:** `/status-agents` shows execution history
+✅ **Backward Compatible:** Graceful degradation if `.claude-code/` missing
+
+### Future Enhancements
+
+**Phase 2 (Optional):** tmux status bar wrapper
+- Real-time status bar in terminal
+- Shows active agents/workflow in top bar
+- See `scripts/claude-code-wrapper.sh` (if implemented)
+
+**Phase 3 (Requires Anthropic):** Claude Code UI integration
+- Official status bar API
+- Native UI indicators for agent activity
+- Visual workflow progress
 
 ---
 

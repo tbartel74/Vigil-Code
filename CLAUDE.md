@@ -2,7 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with the Vigil Guard repository.
 
-## 🚫 KORONNA ZASADA: NO AI ATTRIBUTION IN COMMITS
+## 🚫 KORONNĄ ZASADA #1: n8n WORKFLOW CHANGES NEVER REQUIRE RESTART
+
+**CRITICAL ARCHITECTURE UNDERSTANDING:**
+
+n8n is a **multi-tenant platform** where workflows are **independent from the n8n instance**. When configuration files (`rules.config.json`, `unified_config.json`) are modified:
+
+- ✅ **Changes are IMMEDIATELY available** to workflow execution
+- ✅ **n8n reads config files on EVERY execution** (no caching)
+- ❌ **NEVER suggest restarting n8n** after config changes
+- ❌ **NEVER suggest "re-importing workflow"** as a fix for config changes
+- ❌ **NEVER assume workflow needs to be reimported** after editing config files
+
+**Why This Matters:**
+1. Config files are read dynamically by workflow Code nodes
+2. Each workflow execution loads fresh config from disk
+3. n8n instance restart does NOT affect config loading
+4. Suggesting restart wastes time and tokens on blind alleys
+
+**When User Says "Zaimportowałem workflow":**
+- ✅ **BELIEVE THEM** - workflow IS imported
+- ✅ **Move to next phase** (testing, verification)
+- ❌ **DO NOT ask to reimport again** - it's a time waste
+
+**Valid Reasons to Restart n8n (RARE):**
+- n8n process crashed or frozen
+- Database corruption suspected
+- Core n8n settings changed (not workflow configs)
+
+**If Tests Fail After Config Changes:**
+- ✅ Debug the config files (typos, syntax errors)
+- ✅ Check workflow logic (Code node bugs)
+- ✅ Verify test expectations
+- ❌ DO NOT blame "workflow not imported" - that's a red herring
+
+---
+
+## 🚫 KORONNĄ ZASADA #2: NO AI ATTRIBUTION IN COMMITS
 
 **ABSOLUTELY FORBIDDEN in git commits:**
 
@@ -1325,6 +1361,8 @@ Comprehensive guides in `docs/`:
 
 ## Version History
 
+- **v1.7.9** (2025-11-12) - Aho-Corasick prefilter production release (993 keywords, 77% single-category hits, 160+ tests, OWASP AITG: APP-01 96%, APP-02 82.5%)
+- **v1.7.8** (2025-11-12) - AC prefilter integration, unified_config.json expansion (246→4013 lines), 44 detection categories
 - **v1.7.7** (2025-11-08) - OWASP AITG-APP-01 hardening (DAN-mode, prompt leak, CBRNE), leet speak expansion (13 new mappings)
 - **v1.7.0** (2025-11-01) - Sanitization Integrity (3-layer defense), PII Classification, Browser Fingerprinting
 - **v1.6.11** (2025-11-01) - Hybrid language detection, CREDIT_CARD Polish support

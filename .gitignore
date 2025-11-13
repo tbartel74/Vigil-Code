@@ -4,6 +4,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+package-lock.json
 
 # Operating System
 .DS_Store
@@ -37,20 +38,24 @@ coverage/
 *.temp
 .cache/
 
-# State files (runtime generated)
+# Agent State Files (runtime generated)
 .claude/state/
+.claude/agents/*/..claude/state/
 
-# Local settings (contains API keys, paths)
+# Local Settings (contains user-specific configurations)
 .claude/settings.local.json
-settings.local.json
 
-# Backup directories
-backup-*/
+# Claude Code UI State (runtime-generated)
+.claude-code/
 
 # Build outputs
 dist/
 build/
 
-# Claude Code UI state (runtime-generated, not for repository)
-.claude-code/ui-state.json
-# Keep prompt.txt and agent-manifest.json (static configuration)
+# Backup directories
+backup-*/
+
+# Environment files
+.env
+.env.local
+.env.*.local

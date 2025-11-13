@@ -1,12 +1,13 @@
 {
   "name": "vigil-code",
   "version": "2.0.0",
-  "description": "Autonomous Multi-Agent System for Software Development - Extracted from Vigil Guard",
+  "description": "Autonomous Multi-Agent Orchestration Framework for Claude Code - Production-ready system with 12 specialized agents, 18 skills, and 5 pre-configured workflows",
   "main": ".claude/agents/vg-master-orchestrator/orchestrator.js",
   "type": "commonjs",
   "scripts": {
-    "test": "node .claude/agents/vg-test-automation/agent.js",
+    "test": "node .claude/agents/vg-master-orchestrator/test-full-system.js",
     "demo": "node .claude/agents/vg-master-orchestrator/demo.js",
+    "start": "node .claude/agents/vg-master-orchestrator/init.js",
     "status": "node .claude/agents/vg-master-orchestrator/init.js"
   },
   "keywords": [
@@ -16,21 +17,32 @@
     "workflow",
     "task-automation",
     "claude-code",
-    "development-tools"
+    "development-tools",
+    "ai-agents",
+    "intelligent-routing",
+    "parallel-execution",
+    "tdd-workflow",
+    "agent-coordination"
   ],
-  "author": "Tomasz Bartel <tomasz.bartel@example.com>",
+  "author": "Vigil Guard Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/vigil-code.git"
+    "url": "https://github.com/YOUR_USERNAME/vigil-code.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/vigil-code/issues"
+    "url": "https://github.com/YOUR_USERNAME/vigil-code/issues"
   },
-  "homepage": "https://github.com/your-username/vigil-code#readme",
+  "homepage": "https://github.com/YOUR_USERNAME/vigil-code#readme",
   "engines": {
     "node": ">=18.0.0"
   },
+  "files": [
+    ".claude/",
+    "CLAUDE.md",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {},
   "devDependencies": {}
 }
