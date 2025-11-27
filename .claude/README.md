@@ -296,6 +296,195 @@ Task(
 ✨ Task Completed
 ```
 
+## Effective Usage Guide
+
+### Best Practices
+
+#### 1. Use Trigger Keywords for Better Routing
+
+Include technology-specific keywords in your request:
+
+```
+❌ "Fix the bug in my code"
+✅ "Fix the React component rendering bug"
+✅ "Fix the n8n workflow connection error"
+```
+
+#### 2. Direct Expert Selection with Brackets
+
+When you know which expert you need:
+
+```
+/expert [docker] Why is port 5678 not accessible?
+/expert [security] Review this authentication flow
+/expert [clickhouse] Optimize this slow query
+```
+
+#### 3. Combine Technologies for Multi-Expert
+
+Mention multiple technologies to trigger coordination:
+
+```
+/expert Add REST endpoint with React form and tests
+→ Detects: REST, React, tests
+→ Routes to: express-expert + react-expert + vitest-expert
+```
+
+### Common Scenarios
+
+#### Scenario 1: Quick Question (Single Expert)
+
+```
+User: /expert How do I mock fetch in Vitest?
+
+🤖 vitest-expert (sonnet):
+   Use vi.stubGlobal('fetch', vi.fn()...)
+   📚 Source: vitest.dev/guide/mocking
+```
+
+#### Scenario 2: Implementation Task (Single Expert)
+
+```
+User: /expert Add pagination to the users API endpoint
+
+🤖 express-expert (sonnet):
+   ├─ 📝 Analyzing existing routes...
+   ├─ 📝 Adding page/limit query params...
+   └─ ✅ Created: routes/users.js (modified)
+```
+
+#### Scenario 3: TDD Workflow (Sequential Multi-Expert)
+
+```
+User: /expert Add XSS detection pattern with tests
+
+🧠 Planning: TDD workflow required
+   1. vitest-expert: Create failing test
+   2. n8n-expert: Add detection pattern
+   3. vitest-expert: Verify tests pass
+
+🧪 Step 1: vitest-expert creates fixture
+⚙️  Step 2: n8n-expert adds pattern
+🧪 Step 3: vitest-expert runs tests
+
+✅ Clean State: All tests passing
+```
+
+#### Scenario 4: Independent Work (Parallel Multi-Expert)
+
+```
+User: /expert Create dashboard with backend API and styling
+
+⚡ Parallel execution:
+   • express-expert → /api/dashboard endpoint
+   • react-expert → Dashboard.tsx component
+   • tailwind-expert → Responsive grid layout
+
+✨ All 3 experts completed in parallel
+```
+
+#### Scenario 5: Documentation Lookup
+
+```
+User: /expert What's the correct syntax for ClickHouse TTL?
+
+🤖 clickhouse-expert (sonnet):
+   🔍 Fetching docs... (TTL syntax varies by version)
+   ✅ Confirmed: ALTER TABLE ... MODIFY TTL timestamp + INTERVAL 90 DAY
+   📚 Source: clickhouse.com/docs/en/sql-reference/statements/alter/ttl
+```
+
+#### Scenario 6: Security Audit
+
+```
+User: /expert Review this login endpoint for vulnerabilities
+
+🤖 security-expert (sonnet):
+   ├─ 📝 Checking OWASP Top 10...
+   ├─ ⚠️  Found: No rate limiting
+   ├─ ⚠️  Found: Password in error message
+   └─ 📋 Recommendations provided
+```
+
+### When to Use vs Skip Experts
+
+| Task | Use Expert? | Why |
+|------|-------------|-----|
+| "How to use React hooks?" | ✅ Yes | Technology question |
+| "Add feature with tests" | ✅ Yes | Multi-step workflow |
+| "Fix typo in README" | ❌ No | Simple edit |
+| "What files are in src/?" | ❌ No | Use Explore agent |
+| "Run npm test" | ❌ No | Direct Bash |
+| "Security audit" | ✅ Yes | Specialized knowledge |
+| "Optimize Docker build" | ✅ Yes | Expert optimization |
+
+### Pro Tips
+
+#### Tip 1: Chain Commands for Complex Workflows
+
+```
+# First, get expert advice
+/expert [n8n] What's the best pattern for error handling?
+
+# Then implement
+/expert Add error handling to the detection workflow
+
+# Finally, verify
+/expert [vitest] Run tests and check coverage
+```
+
+#### Tip 2: Use Context Files
+
+Experts read `CLAUDE.md` and `progress.json`. Keep them updated:
+
+```
+# CLAUDE.md - Project conventions experts will follow
+# progress.json - State for multi-step workflows
+```
+
+#### Tip 3: Request Documentation Sources
+
+When you need verified info:
+
+```
+/expert [presidio] How to add Polish PESEL recognizer? Include docs.
+
+→ Expert will cite: microsoft.github.io/presidio/...
+```
+
+#### Tip 4: Parallel for Speed
+
+For independent tasks, be explicit:
+
+```
+/expert Create user model, API endpoint, and React form (can be parallel)
+
+→ Orchestrator detects "parallel" keyword
+→ Runs 3 experts simultaneously
+```
+
+#### Tip 5: TDD Keywords
+
+For test-first development:
+
+```
+/expert Add input validation with TDD
+/expert Create feature using test-driven approach
+/expert Write tests first, then implement login
+
+→ Forces: test → implement → verify sequence
+```
+
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Wrong expert selected | Use `[expert-name]` bracket syntax |
+| Expert doesn't know project structure | Check CLAUDE.md is up to date |
+| Multi-step workflow fails midway | Check `.claude/state/progress.json` |
+| Expert gives outdated info | Ask to "verify in documentation" |
+| Too slow | Use specific expert instead of routing |
+
 ## Key Differences: v2 → v3
 
 | Aspect | v2 (vg-* agents) | v3 (technology experts) |
