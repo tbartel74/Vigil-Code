@@ -1,5 +1,0 @@
-{
-  "type": "commonjs",
-  "description": "Claude Code agent system - internal tooling using CommonJS",
-  "private": true
-}
