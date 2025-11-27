@@ -1,28 +1,18 @@
 {
   "name": "vigil-code",
-  "version": "2.0.0",
-  "description": "Autonomous Multi-Agent Orchestration Framework for Claude Code - Production-ready system with 12 specialized agents, 18 skills, and 5 pre-configured workflows",
-  "main": ".claude/agents/vg-master-orchestrator/orchestrator.js",
-  "type": "commonjs",
-  "scripts": {
-    "test": "node .claude/agents/vg-master-orchestrator/test-full-system.js",
-    "demo": "node .claude/agents/vg-master-orchestrator/demo.js",
-    "start": "node .claude/agents/vg-master-orchestrator/init.js",
-    "status": "node .claude/agents/vg-master-orchestrator/init.js"
-  },
+  "version": "3.0.0",
+  "description": "Universal Technology Expert Framework for Claude Code - 12 technology experts with documentation-aware assistance",
   "keywords": [
-    "autonomous-agents",
-    "multi-agent-system",
-    "orchestration",
-    "workflow",
-    "task-automation",
+    "technology-experts",
     "claude-code",
-    "development-tools",
     "ai-agents",
-    "intelligent-routing",
-    "parallel-execution",
-    "tdd-workflow",
-    "agent-coordination"
+    "documentation-aware",
+    "n8n",
+    "react",
+    "docker",
+    "vitest",
+    "express",
+    "clickhouse"
   ],
   "author": "Vigil Guard Team",
   "license": "MIT",
@@ -34,15 +24,10 @@
     "url": "https://github.com/YOUR_USERNAME/vigil-code/issues"
   },
   "homepage": "https://github.com/YOUR_USERNAME/vigil-code#readme",
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "files": [
     ".claude/",
     "CLAUDE.md",
     "README.md",
     "LICENSE"
-  ],
-  "dependencies": {},
-  "devDependencies": {}
+  ]
 }
