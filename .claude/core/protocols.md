@@ -1,79 +1,191 @@
-# Core Protocols for Technology Expert Agents v3.0
+# Core Protocols for Technology Expert Agents v3.1
 
 This document defines shared protocols that all technology expert agents follow.
 
-## 1. Progress File Protocol
+---
 
-All multi-step tasks use `.claude/state/progress.json` for state management.
+## 1. OODA Loop Protocol (NEW in v3.1)
 
-### Progress File Schema v3.0
+All experts MUST follow the OODA loop before and after tool use. This ensures structured decision-making and traceable reasoning.
+
+### 1.1 OODA Phases
+
+```
+🔍 OBSERVE
+├── Read progress.json for current state
+├── Examine relevant files and context
+├── Identify what information exists vs gaps
+└── Note any blockers or dependencies
+
+🧭 ORIENT
+├── Evaluate available tools for this objective
+├── Consider 2+ alternative approaches
+├── Assess confidence level (HIGH/MEDIUM/LOW)
+└── Identify potential failure modes
+
+🎯 DECIDE
+├── Choose specific action with reasoning
+├── Define expected outcome and success criteria
+├── Plan fallback if action fails
+└── Estimate token cost
+
+▶️ ACT
+├── Execute chosen tool
+├── Capture full output
+├── Update progress.json with OODA state
+└── Evaluate results with interleaved thinking
+```
+
+### 1.2 OODA in progress.json
+
+Each step tracks its OODA state:
 
 ```json
 {
-  "version": "3.0",
-  "workflow_id": "wf-{YYYYMMDD}-{random6}",
-  "created_at": "ISO8601",
-  "updated_at": "ISO8601",
+  "steps": [
+    {
+      "step": 1,
+      "expert": "vitest-expert",
+      "ooda": {
+        "observe": "No existing SQL injection tests found in tests/. Checked rules.config.json - no SQL_INJECTION category exists.",
+        "orient": "TDD approach required. Options: 1) Create fixture first (recommended), 2) Add pattern first (risky - no verification). Confidence: HIGH for option 1.",
+        "decide": "Create fixture at tests/fixtures/malicious/sql-injection.json with UNION SELECT, OR 1=1, DROP TABLE payloads. Success criteria: file created with 5+ payloads.",
+        "act": "Using Write tool to create fixture file."
+      }
+    }
+  ]
+}
+```
+
+### 1.3 Interleaved Thinking
+
+After each tool response, perform interleaved evaluation:
+
+```markdown
+🔄 Post-Action Evaluation:
+- Did output match expectations? [yes/no]
+- What was learned? [key insight]
+- What gaps remain? [list]
+- Next action needed? [description]
+```
+
+### 1.4 OODA Quality Checklist
+
+Before proceeding to ACT phase:
+- [ ] OBSERVE references specific files/data examined
+- [ ] ORIENT considers 2+ alternative approaches
+- [ ] DECIDE includes confidence level (HIGH/MEDIUM/LOW)
+- [ ] DECIDE specifies success criteria
+- [ ] ACT specifies exact tool and parameters
+
+---
+
+## 2. Progress File Protocol
+
+All multi-step tasks use `.claude/state/progress.json` for state management.
+
+### 2.1 Progress File Schema v3.1
+
+```json
+{
+  "schema_version": "3.1",
+  "workflow_id": "wf-20251201-abc123",
+  "created_at": "2025-12-01T10:00:00Z",
+  "updated_at": "2025-12-01T10:05:00Z",
 
   "task": {
-    "original_request": "User's original request",
-    "summary": "Brief task summary",
-    "project_context": {
-      "name": "Project name",
-      "root": "/path/to/project",
-      "relevant_files": []
-    }
-  },
-
-  "planning": {
-    "thinking": "Extended thinking about the approach...",
-    "strategy_rationale": "Why this strategy was chosen",
-    "risks": ["Potential issue 1", "Potential issue 2"],
-    "alternatives_considered": ["Alternative approach 1"]
-  },
-
-  "classification": {
-    "primary_expert": "n8n-expert",
-    "supporting_experts": ["vitest-expert"],
-    "strategy": "sequential|parallel|single",
+    "original_request": "Add SQL injection detection with tests",
+    "summary": "TDD workflow: create test → add pattern → verify",
+    "complexity": "medium",
     "estimated_steps": 3
   },
 
-  "status": "initialized|in_progress|completed|failed",
+  "planning": {
+    "thinking_budget": "extended",
+    "strategy": "sequential",
+    "model_override": null,
+    "thinking": "This requires TDD workflow. First create failing test, then implement pattern, finally verify. Risk: pattern too broad causing false positives.",
+    "plan": [
+      "1. vitest-expert: Create test fixture for SQL injection",
+      "2. n8n-expert: Add detection pattern via workflow",
+      "3. vitest-expert: Run tests to verify detection"
+    ],
+    "risks": [
+      "Pattern might cause false positives on legitimate SQL queries",
+      "Workflow JSON structure might have changed"
+    ],
+    "alternatives_considered": [
+      "Single n8n-expert (rejected: no test verification)",
+      "Parallel execution (rejected: test depends on pattern)"
+    ]
+  },
+
+  "classification": {
+    "primary_expert": "vitest-expert",
+    "supporting_experts": ["n8n-expert"],
+    "execution_order": ["vitest-expert", "n8n-expert", "vitest-expert"],
+    "parallel_eligible": false
+  },
+
+  "token_budget": {
+    "allocated": 50000,
+    "used": 0,
+    "remaining": 50000,
+    "warning_threshold": 40000
+  },
+
+  "status": "in_progress",
   "current_step": 1,
   "total_steps": 3,
 
   "steps": [
     {
-      "step": 1,
+      "id": 1,
       "expert": "vitest-expert",
       "model": "sonnet",
-      "action": "create_fixture",
-      "status": "completed|in_progress|pending|failed",
-      "started_at": "ISO8601",
-      "completed_at": "ISO8601",
-      "duration_ms": 1200,
+      "action": "create_test",
+      "status": "completed",
+      "started_at": "2025-12-01T10:00:05Z",
+      "completed_at": "2025-12-01T10:01:30Z",
+      "duration_seconds": 85,
+      "tokens_used": 5200,
+      "ooda": {
+        "observe": "No existing SQL injection tests found",
+        "orient": "Need fixture in tests/fixtures/malicious/",
+        "decide": "Create sql-injection.json with 5 payloads. Confidence: HIGH",
+        "act": "Write fixture, add test case"
+      },
       "result": {
         "summary": "Created SQL injection test fixture",
-        "details": {}
+        "details": {
+          "payloads_count": 5,
+          "test_file": "tests/e2e/sql-injection.test.js"
+        }
       },
-      "artifacts": ["tests/fixtures/sql-injection.json"],
+      "artifacts": ["tests/fixtures/malicious/sql-injection.json"],
       "docs_consulted": ["https://vitest.dev/api/"]
     },
     {
-      "step": 2,
+      "id": 2,
       "expert": "n8n-expert",
       "model": "sonnet",
       "action": "add_pattern",
       "status": "in_progress",
+      "started_at": "2025-12-01T10:01:35Z",
+      "ooda": {
+        "observe": "Test created expecting SQL patterns to be detected",
+        "orient": "Options: 1) Edit rules.config.json, 2) Use Web UI",
+        "decide": null,
+        "act": null
+      },
       "context": {
-        "pattern_to_add": "sql_injection_hex",
+        "pattern_to_add": "sql_injection_union",
         "category": "CODE_INJECTION",
-        "fixture_file": "tests/fixtures/sql-injection.json"
+        "fixture_file": "tests/fixtures/malicious/sql-injection.json"
       }
     },
     {
-      "step": 3,
+      "id": 3,
       "expert": "vitest-expert",
       "model": "sonnet",
       "action": "run_tests",
@@ -81,90 +193,267 @@ All multi-step tasks use `.claude/state/progress.json` for state management.
     }
   ],
 
+  "checkpoints": [
+    {
+      "id": "cp-001",
+      "step_id": 1,
+      "timestamp": "2025-12-01T10:01:30Z",
+      "type": "step_complete",
+      "state_hash": "a1b2c3d4",
+      "files_modified": ["tests/fixtures/malicious/sql-injection.json"],
+      "git_ref": "abc123",
+      "restorable": true
+    }
+  ],
+
+  "retry_policy": {
+    "max_retries": 3,
+    "current_retries": 0,
+    "backoff_seconds": [5, 15, 45],
+    "last_error": null
+  },
+
   "artifacts": {
-    "files_created": [],
+    "files_created": ["tests/fixtures/malicious/sql-injection.json"],
     "files_modified": [],
-    "documentation_consulted": []
+    "documentation_consulted": ["https://vitest.dev/api/"]
   },
 
   "clean_state": {
     "all_tests_pass": false,
     "ready_to_merge": false,
-    "pending_issues": []
+    "lint_clean": true,
+    "pending_issues": ["Tests not yet run"]
   },
 
   "errors": []
 }
 ```
 
-### New in v3.0
+### 2.2 New in v3.1
 
-1. **Planning Section**: Extended thinking before execution
-2. **Model Field**: Each step specifies which model (sonnet/opus)
-3. **Clean State**: Track if work is ready to merge
-4. **Step Timing**: started_at, completed_at for metrics
-5. **Docs Consulted**: Track documentation lookups per step
+| Feature | Description |
+|---------|-------------|
+| **OODA per step** | Each step tracks observe/orient/decide/act |
+| **Token budget** | Track and warn on token usage |
+| **Checkpoints** | Save state for recovery |
+| **Retry policy** | Configurable retry with backoff |
+| **Step timing** | Duration tracking for optimization |
+| **Complexity field** | simple/medium/complex for budget allocation |
 
-### Reading Progress
+### 2.3 Reading Progress
 
 ```
 1. Check if .claude/state/progress.json exists
 2. If exists and status != completed:
-   - Resume from current_step
-   - Use context from completed steps
-   - Check clean_state for any pending issues
+   - Read OODA state from current step
+   - Resume from where left off
+   - Check checkpoints for recovery options
 3. If not exists or completed:
-   - Create new workflow
+   - Create new workflow with planning phase
 ```
 
-### Updating Progress
+### 2.4 Updating Progress
 
 ```
-1. Before starting step: set status = "in_progress", started_at
-2. During step: update result.details incrementally
+1. Before starting step:
+   - Set status = "in_progress"
+   - Set started_at = now()
+   - Initialize OODA with observe phase
+2. During step:
+   - Update OODA phases as you progress
+   - Update result.details incrementally
 3. After step:
-   - Set status = "completed", completed_at
-   - Calculate duration_ms
-   - Add artifacts created/modified
-   - Add docs consulted
-4. Set next step context for handoff
-5. If final step:
+   - Complete OODA.act with outcome
    - Set status = "completed"
-   - Update clean_state
+   - Set completed_at, calculate duration_seconds
+   - Create checkpoint
+   - Update token_budget.used
+4. On error:
+   - Log in errors array
+   - Check retry_policy
+   - Attempt recovery or escalate
 ```
 
 ---
 
-## 2. Extended Thinking Protocol
+## 3. Batch Operations Protocol (NEW in v3.1)
 
-### When to Use Extended Thinking
+When processing multiple files/items, use batch scripts instead of individual tool calls. This reduces token usage by 50-80%.
 
-Use planning phase for:
-- Multi-expert workflows (3+ steps)
-- Tasks with potential risks
-- Unclear requirements
-- Complex coordination needed
+### 3.1 Anti-Pattern (Token Expensive)
 
-### Planning Format
+```
+Expert makes 10 Read calls:
+  Read(file1.ts) → 500 tokens
+  Read(file2.ts) → 500 tokens
+  ...
+  Read(file10.ts) → 500 tokens
+
+Total: 5000 tokens + 10 round-trips
+```
+
+### 3.2 Recommended Pattern (Token Efficient)
+
+```bash
+# Expert generates batch script
+for file in $(find services -name "*.ts" | head -20); do
+  echo "=== $file ==="
+  grep -n "@claude-context" "$file" 2>/dev/null | head -5
+done
+```
+
+```
+Expert makes 1 Bash call:
+  Bash(script) → 800 tokens
+
+Total: 800 tokens + 1 round-trip
+Savings: 84%
+```
+
+### 3.3 Batch Operation Templates
+
+**Template 1: Multi-File Search**
+```bash
+# Find all files matching pattern and extract context
+find services -name "*.ts" -exec grep -l "pattern" {} \; 2>/dev/null | \
+  while read f; do
+    echo "=== FILE: $f ==="
+    grep -n "pattern" "$f" | head -5
+  done
+```
+
+**Template 2: Aggregate Analysis**
+```bash
+# Count occurrences across codebase
+echo "=== Pattern Distribution ==="
+for dir in services/*/; do
+  count=$(grep -r "pattern" "$dir" 2>/dev/null | wc -l)
+  [ "$count" -gt 0 ] && echo "$dir: $count matches"
+done
+```
+
+**Template 3: Extract Specific Sections**
+```bash
+# Extract @claude-context blocks from all files
+for file in $(find . -name "*.ts" -o -name "*.tsx" 2>/dev/null); do
+  if grep -q "@claude-context" "$file" 2>/dev/null; then
+    echo "=== $file ==="
+    sed -n '/@claude-context/,/@end-claude-context/p' "$file"
+  fi
+done
+```
+
+**Template 4: JSON Processing**
+```bash
+# Extract all category names from rules.config.json
+jq -r '.categories | keys[]' services/workflow/config/rules.config.json 2>/dev/null
+```
+
+### 3.4 When to Use Batch Operations
+
+| Scenario | Threshold | Action |
+|----------|-----------|--------|
+| File search | >3 files | Use Bash + find/grep |
+| Content extraction | >5 files | Use Bash + loop |
+| Pattern counting | >2 directories | Use Bash + aggregation |
+| JSON analysis | >10 keys | Use jq in Bash |
+| File listing | >10 files | Use find instead of Glob |
+
+### 3.5 Batch Operation OODA
+
+When using batch operations, document in OODA:
 
 ```json
 {
-  "planning": {
-    "thinking": "Let me analyze this task carefully. The user wants to add SQL injection detection with tests. This requires TDD workflow: 1) Create test that will fail, 2) Add pattern, 3) Verify test passes. Risk: pattern might be too broad and cause false positives. Alternative: could use single expert if we skip TDD.",
-    "strategy_rationale": "Sequential TDD ensures pattern works correctly before considering complete",
-    "risks": [
-      "Pattern might cause false positives on legitimate SQL queries",
-      "Workflow JSON might have incompatible structure"
-    ],
-    "alternatives_considered": [
-      "Single n8n-expert (rejected: no test verification)",
-      "Parallel execution (rejected: test depends on pattern)"
-    ]
+  "ooda": {
+    "observe": "Need to find all files with @context blocks across 50+ files",
+    "orient": "Options: 1) 50 Glob calls (~25K tokens), 2) Batch script (~800 tokens). Clear winner: batch.",
+    "decide": "Use find + grep batch script. Confidence: HIGH",
+    "act": "Executing batch script via Bash tool"
   }
 }
 ```
 
-### Output Format for Planning
+---
+
+## 4. Tool Categories Protocol (NEW in v3.1)
+
+Tools are categorized to optimize token usage.
+
+### 4.1 Tool Categories
+
+| Category | Tools | Loaded | Tokens |
+|----------|-------|--------|--------|
+| **Core** | Read, Edit, Glob, Grep | Always | ~850 |
+| **Extended** | Write, Bash, Task | On first use | ~950 |
+| **Deferred** | WebFetch, WebSearch, NotebookEdit | Discovery | ~1050 |
+
+### 4.2 Category Definitions
+
+**Core Tools** - Essential for basic operations:
+- `Read` - Read file contents
+- `Edit` - Modify existing files
+- `Glob` - Find files by pattern
+- `Grep` - Search file contents
+
+**Extended Tools** - Common but not always needed:
+- `Write` - Create new files
+- `Bash` - Execute commands
+- `Task` - Spawn subagents
+
+**Deferred Tools** - Only when specifically needed:
+- `WebFetch` - Fetch documentation
+- `WebSearch` - Search the web
+- `NotebookEdit` - Edit Jupyter notebooks
+
+### 4.3 Loading Strategy
+
+```
+Session Start
+    │
+    ▼
+Load Core Tools (~850 tokens)
+    │
+    ▼
+Expert Activated
+    │
+    ├─── Need to create file? ──► Load Write
+    │
+    ├─── Need to run command? ──► Load Bash
+    │
+    └─── Uncertain about API? ──► Load WebFetch via discovery
+```
+
+---
+
+## 5. Extended Thinking Protocol
+
+### 5.1 When to Use Extended Thinking
+
+Use planning phase for:
+- Multi-expert workflows (2+ steps)
+- Tasks with potential risks
+- Unclear requirements
+- Complex coordination needed
+- Tasks estimated >10K tokens
+
+### 5.2 Planning Format
+
+```json
+{
+  "planning": {
+    "thinking_budget": "extended",
+    "thinking": "Let me analyze this task carefully. The user wants to add SQL injection detection with tests. This requires TDD workflow: 1) Create test that will fail, 2) Add pattern, 3) Verify test passes. Risk: pattern might be too broad and cause false positives.",
+    "strategy": "sequential",
+    "plan": ["Step 1...", "Step 2...", "Step 3..."],
+    "risks": ["Risk 1", "Risk 2"],
+    "alternatives_considered": ["Alt 1 (rejected: reason)", "Alt 2 (rejected: reason)"]
+  }
+}
+```
+
+### 5.3 Output Format for Planning
 
 ```
 🧠 Planning Phase
@@ -181,18 +470,19 @@ Use planning phase for:
 📝 Execution Plan:
    1. [expert]: [action]
    2. [expert]: [action]
-   ...
+
+💰 Token Budget: [estimated] tokens
 
 ▶️  Proceeding with execution...
 ```
 
 ---
 
-## 3. Documentation Protocol
+## 6. Documentation Protocol
 
 All experts follow this protocol for knowledge verification.
 
-### 3-Tier Knowledge Model
+### 6.1 3-Tier Knowledge Model
 
 | Tier | Source | Usage | Speed |
 |------|--------|-------|-------|
@@ -200,24 +490,15 @@ All experts follow this protocol for knowledge verification.
 | **Tier 2** | Official documentation (WebFetch) | API details, configs | 1-2s |
 | **Tier 3** | Community (WebSearch) | Edge cases, workarounds | 2-5s |
 
-### Confidence Levels
+### 6.2 Confidence Levels
 
 | Level | Description | Action |
 |-------|-------------|--------|
 | **HIGH** | Core knowledge, used daily | Answer directly |
-| **MEDIUM** | Know the concept, unsure of details | Verify in docs first |
+| **MEDIUM** | Know concept, unsure of details | Verify in docs first |
 | **LOW** | Unfamiliar or edge case | Research thoroughly |
 
-### Uncertainty Triggers
-
-Fetch documentation when:
-- Asked about specific API parameters
-- Version-specific features
-- Complex configuration options
-- Error messages or codes
-- Anything that might have changed recently
-
-### Verification Pattern
+### 6.3 Verification Pattern
 
 ```markdown
 ## High Confidence Response
@@ -241,9 +522,9 @@ Based on my research: [solution]
 
 ---
 
-## 4. Expert Invocation Protocol
+## 7. Expert Invocation Protocol
 
-### Via Task Tool with Model Parameter
+### 7.1 Via Task Tool with Model Parameter
 
 ```javascript
 Task(
@@ -254,32 +535,37 @@ Task(
 
            Execute: ${action}
 
+           Follow OODA protocol:
+           1. OBSERVE: Read current state
+           2. ORIENT: Consider approaches
+           3. DECIDE: Choose action with confidence level
+           4. ACT: Execute and update progress.json
+
            After completion:
-           1. Update progress.json with your results
-           2. Add any artifacts to the artifacts list
-           3. Record docs consulted
-           4. Return brief summary`,
+           - Update progress.json with OODA state and results
+           - Create checkpoint if step completed
+           - Return structured output`,
   subagent_type: "general-purpose",
   model: "${model}"  // From expert frontmatter
 )
 ```
 
-### Model Selection
+### 7.2 Model Selection
 
 | Expert | Model | Rationale |
 |--------|-------|-----------|
 | orchestrator | opus | Complex coordination, planning |
 | All others | sonnet | Fast, specialized tasks |
 
-### Parallel Invocation
+### 7.3 Parallel Invocation
 
 When experts are independent, invoke multiple in single message:
 
 ```javascript
 // Multiple Task calls in same response
-Task(prompt: "vitest-expert...", model: "sonnet")
-Task(prompt: "react-expert...", model: "sonnet")
-Task(prompt: "tailwind-expert...", model: "sonnet")
+Task(prompt: "vitest-expert: create fixture...", model: "sonnet")
+Task(prompt: "react-expert: update component...", model: "sonnet")
+Task(prompt: "tailwind-expert: add styles...", model: "sonnet")
 ```
 
 **Requirements for parallel:**
@@ -289,30 +575,215 @@ Task(prompt: "tailwind-expert...", model: "sonnet")
 
 ---
 
-## 5. Response Format Protocol
+## 8. Checkpoint Protocol (NEW in v3.1)
 
-### Progress Reporting (Orchestrator)
+### 8.1 When to Checkpoint
+
+| Event | Action | Required |
+|-------|--------|----------|
+| Step completed successfully | Create checkpoint | ✅ Required |
+| Before risky operation | Create checkpoint | ✅ Required |
+| After 5+ minutes of work | Create checkpoint | Recommended |
+| Before expert handoff | Create checkpoint | ✅ Required |
+
+### 8.2 Checkpoint Structure
+
+```json
+{
+  "id": "cp-001",
+  "step_id": 1,
+  "timestamp": "2025-12-01T10:01:30Z",
+  "type": "step_complete",
+  "state": {
+    "progress_snapshot": "...",
+    "ooda_state": { "observe": "...", "orient": "...", "decide": "...", "act": "..." }
+  },
+  "files_modified": ["path/to/file.ts"],
+  "git_status": {
+    "ref": "abc123",
+    "dirty_files": []
+  },
+  "restorable": true,
+  "restore_command": "git checkout abc123 -- path/to/file.ts"
+}
+```
+
+### 8.3 Recovery Procedures
+
+#### Procedure 1: Tool Failure Recovery
+
+```
+Tool call fails with error
+    │
+    ▼
+1. Log error in progress.json
+2. Check error category (E0xx/E1xx/E2xx/E3xx)
+    │
+    ├── E0xx (Recoverable) ──► Apply retry policy
+    │   └── If max_retries exceeded ──► Try alternative approach
+    │
+    ├── E1xx (Soft Error) ──► Use alternative tool/approach
+    │   └── Update OODA with new orient
+    │
+    ├── E2xx (Hard Error) ──► Create checkpoint, escalate to user
+    │
+    └── E3xx (Validation) ──► Analyze failure, apply fix, retry
+```
+
+#### Procedure 2: Expert Timeout Recovery
+
+```
+Expert timeout detected
+    │
+    ▼
+1. Save current OODA state to checkpoint
+2. Log timeout in progress.json
+3. Check what was completed
+    │
+    ├── Partial work done? ──► Create checkpoint, resume
+    │
+    └── No progress? ──► Rollback to last checkpoint
+                              │
+                              ▼
+                        Try alternative approach
+```
+
+#### Procedure 3: Validation Failure Recovery
+
+```
+Validation failed (tests, lint, build)
+    │
+    ▼
+1. Save failing state to checkpoint
+2. Analyze failure cause (OODA observe)
+3. Identify fix
+    │
+    ├── Fixable? ──► Apply fix, create checkpoint, re-validate
+    │   │
+    │   └── Still failing? ──► Escalate with diagnostic
+    │
+    └── Not fixable? ──► Rollback to last clean checkpoint
+                              │
+                              ▼
+                        Report failure to user
+```
+
+#### Recovery Command Reference
+
+| Scenario | Command | Example |
+|----------|---------|---------|
+| Restore file | `git checkout {ref} -- {file}` | `git checkout abc123 -- src/api.ts` |
+| Restore all | `git checkout {ref}` | `git checkout abc123` |
+| View diff | `git diff {checkpoint_ref}` | `git diff cp-001-ref` |
+| List changes | `git status --porcelain` | Check modified files |
+
+---
+
+## 9. Retry Protocol (NEW in v3.1)
+
+### 9.1 Retry Policy
+
+```json
+{
+  "retry_policy": {
+    "max_retries": 3,
+    "current_retries": 0,
+    "backoff_seconds": [5, 15, 45],
+    "last_error": null
+  }
+}
+```
+
+### 9.2 Error Taxonomy
+
+#### Recoverable Errors (Retry)
+
+| Code | Error | Retry Strategy | Max Retries |
+|------|-------|----------------|-------------|
+| E001 | Network timeout | Exponential backoff (5s, 15s, 45s) | 3 |
+| E002 | Rate limit | Wait + retry after delay | 3 |
+| E003 | Transient file lock | Wait 5s, retry | 3 |
+| E004 | WebFetch 5xx | Exponential backoff | 3 |
+| E005 | Service unavailable | Wait 30s, retry | 2 |
+
+#### Soft Errors (Alternative Approach)
+
+| Code | Error | Alternative | Example |
+|------|-------|-------------|---------|
+| E101 | File not found | Search with Glob | `Glob("**/*.json")` |
+| E102 | Pattern not found | Broaden search | Remove constraints |
+| E103 | WebFetch 404 | Try WebSearch | Search for similar docs |
+| E104 | Tool not available | Use alternative tool | Edit → Write new file |
+| E105 | Partial match | Expand context | Read more lines |
+
+#### Hard Errors (Escalate)
+
+| Code | Error | Action | User Message |
+|------|-------|--------|--------------|
+| E201 | Permission denied | Halt + report | "Cannot access file, check permissions" |
+| E202 | Out of tokens | Save state, stop | "Token limit reached, saved progress" |
+| E203 | Conflicting edits | Request resolution | "File changed externally, merge needed" |
+| E204 | Security violation | Halt immediately | "Security constraint violated" |
+| E205 | Dependency missing | Report to user | "Required dependency not installed" |
+
+#### Validation Errors (Fix and Retry)
+
+| Code | Error | Action | Example |
+|------|-------|--------|---------|
+| E301 | Test failure | Analyze + fix | Run test, read failure, fix code |
+| E302 | Lint failure | Auto-fix | `npm run lint:fix` |
+| E303 | Type error | Fix types | Update types, re-check |
+| E304 | Build failure | Debug + fix | Read build output, fix issue |
+
+### 9.3 Retry Flow
+
+```
+Error Occurs
+    │
+    ▼
+Is error retryable?
+    │
+    ├─ NO ──► Log error, escalate
+    │
+    └─ YES ──► current_retries < max_retries?
+                    │
+                    ├─ NO ──► Log, try alternative approach
+                    │
+                    └─ YES ──► Wait backoff_seconds[current_retries]
+                                    │
+                                    ▼
+                               Increment current_retries
+                                    │
+                                    ▼
+                               Retry operation
+```
+
+---
+
+## 10. Response Format Protocol
+
+### 10.1 Orchestrator Progress Report
 
 ```
 🎯 Task: [description]
 
-🧠 Planning: [brief strategy]
+🧠 Planning:
+   [brief strategy with OODA summary]
 
 📋 Classification:
    • Primary Expert: {expert}
    • Strategy: {strategy}
    • Steps: {n}
+   • Token Budget: {budget}
 
 🤖 Step 1/{n}: {expert-name} (model: {model})
-   ├─ ▶️  Action: {action}
+   ├─ 🔍 OBSERVE: {what was examined}
+   ├─ 🧭 ORIENT: {approaches considered}
+   ├─ 🎯 DECIDE: {chosen action} [Confidence: HIGH]
+   ├─ ▶️  ACT: {tool used}
    ├─ 📝 {progress message}
-   └─ ✅ Completed ({duration})
-
-🤖 Step 2/{n}: {expert-name}
-   ├─ ▶️  Action: {action}
-   ├─ 🔍 Fetching docs...
-   ├─ 📝 {progress message}
-   └─ ✅ Completed ({duration})
+   └─ ✅ Completed ({duration}) [Tokens: {n}]
+   └─ 💾 Checkpoint: cp-001
 
 ═══════════════════════════════════════
 ✨ Task Completed in {total_duration}
@@ -324,22 +795,24 @@ Task(prompt: "tailwind-expert...", model: "sonnet")
    • {file1}
    • {file2}
 
+💰 Token Usage: {used}/{allocated}
+
 ✅ Clean State:
    • Tests: {pass/fail}
    • Ready to merge: {yes/no}
-
-💡 Next Steps (if any):
-   1. {suggestion}
 ═══════════════════════════════════════
 ```
 
-### Expert Response Format
+### 10.2 Expert Response Format
 
 ```
 ## Action: {action_name}
 
-### Analysis
-{what I found/understood}
+### OODA Summary
+- **Observe:** {what I examined}
+- **Orient:** {approaches I considered}
+- **Decide:** {what I chose and why} [Confidence: {level}]
+- **Act:** {what tool I used}
 
 ### Solution
 {implementation details or guidance}
@@ -356,49 +829,55 @@ Task(prompt: "tailwind-expert...", model: "sonnet")
 ### Documentation Consulted
 - {url}: {what was verified}
 
-### Confidence: {HIGH|MEDIUM|LOW}
-{any caveats or notes}
+### Status: {success|partial|failed|blocked}
 ```
 
 ---
 
-## 6. Error Handling Protocol
+## 11. Error Handling Protocol
 
-### When Expert Encounters Error
-
-1. Log error in progress.json errors array
-2. Attempt recovery if possible
-3. If unrecoverable:
-   - Set step status to "failed"
-   - Provide clear error message
-   - Suggest alternative approaches
-
-### Error Response Format
+### 11.1 Error Response Format
 
 ```
 ❌ Error in {action}
 
+**OODA State at Failure:**
+- Observe: {what was seen}
+- Orient: {what was attempted}
+- Decide: {what was chosen}
+- Act: {what failed}
+
 **Problem:** {description}
 
-**Attempted:** {what was tried}
+**Category:** {E001|E101|E201|...}
+
+**Attempted Recovery:** {what was tried}
 
 **Suggestion:** {how to proceed}
 
-**Documentation:** {relevant docs if applicable}
+**Checkpoint Available:** {cp-xxx or none}
 ```
 
-### Error Schema in progress.json
+### 11.2 Error Schema in progress.json
 
 ```json
 {
   "errors": [
     {
-      "step": 2,
+      "step_id": 2,
       "expert": "n8n-expert",
-      "error": "Invalid JSON structure",
-      "timestamp": "ISO8601",
+      "error_code": "E101",
+      "error_message": "File not found: workflow.json",
+      "timestamp": "2025-12-01T10:05:00Z",
+      "ooda_state": {
+        "observe": "...",
+        "orient": "...",
+        "decide": "...",
+        "act": "Read workflow.json"
+      },
       "recoverable": true,
-      "recovery_action": "Fixed malformed node definition"
+      "recovery_action": "Search for workflow file with Glob",
+      "retry_count": 1
     }
   ]
 }
@@ -406,55 +885,57 @@ Task(prompt: "tailwind-expert...", model: "sonnet")
 
 ---
 
-## 7. Handoff Protocol
+## 12. Handoff Protocol
 
-### Between Experts
+### 12.1 Between Experts
 
 When one expert hands off to another:
 
 1. **Outgoing expert:**
-   - Complete current step with full details
+   - Complete OODA cycle for current step
+   - Create checkpoint
    - Document all relevant context in next step
    - List artifacts created
-   - Note any decisions made
-   - Record docs consulted
+   - Update token_budget.used
 
 2. **Incoming expert:**
-   - Read completed steps for history
-   - Read next step for immediate context
+   - Read OODA state from previous steps
+   - Read checkpoint for recovery options
    - Check artifacts for files to work with
-   - Continue without re-doing previous work
+   - Continue OODA from observe phase
 
-### Context Passing Example
+### 12.2 Context Passing Example
 
 ```json
 {
   "steps": [
     {
-      "step": 1,
+      "id": 1,
       "expert": "vitest-expert",
       "status": "completed",
+      "ooda": {
+        "observe": "No SQL tests exist",
+        "orient": "TDD approach: fixture → test → pattern",
+        "decide": "Create fixture first. Confidence: HIGH",
+        "act": "Write tool to create fixture"
+      },
       "result": {
-        "summary": "Created test fixture",
+        "summary": "Created test fixture with 5 payloads",
         "details": {
-          "test_file": "tests/e2e/sql-injection.test.js",
-          "payloads_count": 5,
-          "expected_status": "BLOCKED"
+          "payloads": ["UNION SELECT", "OR 1=1", "DROP TABLE", "'; --", "1; DELETE FROM"]
         }
       },
-      "artifacts": ["tests/fixtures/sql-injection.json"]
+      "artifacts": ["tests/fixtures/malicious/sql-injection.json"]
     },
     {
-      "step": 2,
+      "id": 2,
       "expert": "n8n-expert",
       "status": "pending",
       "context": {
-        "pattern_to_test": "sql_injection_hex",
+        "from_step": 1,
+        "pattern_needed": "SQL injection detection",
         "expected_result": "BLOCKED",
         "test_file": "tests/e2e/sql-injection.test.js",
-        "relevant_files": [
-          "services/workflow/config/rules.config.json"
-        ],
         "notes": "Fixture expects score >= 85 for BLOCKED status"
       }
     }
@@ -464,9 +945,9 @@ When one expert hands off to another:
 
 ---
 
-## 8. Clean State Protocol
+## 13. Clean State Protocol
 
-### Requirements for Clean State
+### 13.1 Requirements for Clean State
 
 Before marking workflow as complete:
 
@@ -475,94 +956,126 @@ Before marking workflow as complete:
   "clean_state": {
     "all_tests_pass": true,
     "ready_to_merge": true,
+    "lint_clean": true,
     "pending_issues": []
   }
 }
 ```
 
-### Validation Checklist
+### 13.2 Validation Checklist
 
+- [ ] All OODA cycles completed
+- [ ] All checkpoints valid
 - [ ] All created files saved
 - [ ] Tests passing (if applicable)
 - [ ] No uncommitted changes that break build
 - [ ] Documentation updated if needed
-- [ ] No security vulnerabilities introduced
-
-### If Not Clean
-
-```json
-{
-  "clean_state": {
-    "all_tests_pass": false,
-    "ready_to_merge": false,
-    "pending_issues": [
-      "2 tests failing in bypass-scenarios.test.js",
-      "Need to update documentation for new pattern"
-    ]
-  }
-}
-```
+- [ ] Token budget not exceeded
 
 ---
 
-## 9. YAML Frontmatter Protocol
+## 14. YAML Frontmatter Protocol
 
-### Expert Definition Standard
-
-Each expert in `.claude/agents/{expert}/AGENT.md` starts with:
+### 14.1 Expert Definition Standard (v3.1)
 
 ```yaml
 ---
+# === IDENTITY ===
 name: expert-name
+version: "3.1"
 description: |
-  Brief description of expertise.
-  What this expert specializes in.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - WebFetch
-  - WebSearch
-model: sonnet  # or opus for orchestrator
+  Expert description with specialization details.
+
+# === MODEL CONFIGURATION ===
+model: sonnet  # sonnet | opus
+thinking: extended  # extended | standard | minimal
+
+# === TOOL CONFIGURATION ===
+tools:
+  core:
+    - Read
+    - Edit
+    - Glob
+    - Grep
+  extended:
+    - Write
+    - Bash
+  deferred:
+    - WebFetch
+    - WebSearch
+
+# === TOOL EXAMPLES ===
+tool-examples:
+  Read:
+    - description: "Read workflow JSON"
+      parameters:
+        file_path: "/path/to/file.json"
+      expected: "Full workflow with nodes"
+  WebFetch:
+    - description: "Fetch API documentation"
+      parameters:
+        url: "https://docs.example.com/api"
+        prompt: "Extract all methods"
+      expected: "List of API methods"
+
+# === ROUTING ===
 triggers:
-  - "keyword1"
-  - "keyword2"
+  primary:
+    - "keyword1"  # High confidence routing
+    - "keyword2"
+  secondary:
+    - "keyword3"  # Medium confidence
+
+# === OUTPUT SCHEMA ===
+output-schema:
+  type: object
+  required: [status, findings, actions_taken]
+  properties:
+    status:
+      enum: [success, partial, failed, blocked]
+    findings:
+      type: array
+    actions_taken:
+      type: array
+    ooda:
+      type: object
+    next_steps:
+      type: array
 ---
 ```
 
-### Frontmatter Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Expert identifier |
-| `description` | string | Multi-line description |
-| `allowed-tools` | array | Tools this expert can use |
-| `model` | string | Preferred model (sonnet/opus) |
-| `triggers` | array | Keywords for automatic routing |
-
-### Routing Logic
+### 14.2 Routing Logic with Confidence
 
 ```python
 def route_to_expert(task_description):
-    # Load all expert frontmatters
     experts = load_expert_configs()
-
-    # Score each expert based on trigger matches
     scores = {}
+
     for expert in experts:
-        score = sum(
-            1 for trigger in expert.triggers
-            if trigger.lower() in task_description.lower()
-        )
+        score = 0
+        # Primary triggers = 10 points (high confidence)
+        for trigger in expert.triggers.primary:
+            if trigger.lower() in task_description.lower():
+                score += 10
+        # Secondary triggers = 5 points (medium confidence)
+        for trigger in expert.triggers.secondary:
+            if trigger.lower() in task_description.lower():
+                score += 5
         if score > 0:
             scores[expert.name] = score
 
-    # Return highest scoring expert(s)
-    if not scores:
-        return ["orchestrator"]  # Default
+    # If highest score < 10, use orchestrator
+    if not scores or max(scores.values()) < 10:
+        return "orchestrator"
 
-    max_score = max(scores.values())
-    return [e for e, s in scores.items() if s == max_score]
+    return max(scores, key=scores.get)
 ```
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 3.0 | 2025-11-27 | Initial v3.0 with planning, model selection |
+| 3.1 | 2025-12-01 | OODA protocol, batch operations, checkpoints, retry, tool categories |

@@ -1,6 +1,8 @@
-# Technology Expert Agent System v3.0
+# Technology Expert Agent System v3.1
 
 A universal, technology-focused agent system for Claude Code. Agents are experts in **technologies**, not specific projects.
+
+> **v3.1 Highlights:** OODA Protocol, Tool Categories, Checkpointing, Error Recovery
 
 ## Philosophy
 
@@ -16,32 +18,89 @@ A universal, technology-focused agent system for Claude Code. Agents are experts
 - **Future-proof**: Your code evolves, agents adapt via context
 - **Documentation-aware**: Experts fetch official docs when uncertain
 
-## What's New in v3.0
+## What's New in v3.1
 
-### YAML Frontmatter
+### OODA Protocol
 
-Each expert now has structured metadata:
+Every expert follows the OODA loop (Observe-Orient-Decide-Act) for structured decision-making:
+
+```
+🔍 OBSERVE: Read current state, examine files
+🧭 ORIENT: Consider 2+ approaches, assess confidence
+🎯 DECIDE: Choose action with reasoning [Confidence: HIGH/MEDIUM/LOW]
+▶️ ACT: Execute tool, update progress.json
+```
+
+### Tool Categories
+
+Tools are now categorized for progressive loading (saves 35-50% tokens):
+
+| Category | Tools | When Loaded |
+|----------|-------|-------------|
+| **Core** | Read, Edit, Glob, Grep | Always |
+| **Extended** | Write, Bash, Task | On-demand |
+| **Deferred** | WebFetch, WebSearch | Discovery-based |
+
+### Checkpointing & Recovery
+
+Checkpoints created after each step enable recovery from failures:
+
+```json
+{
+  "checkpoints": [{
+    "id": "cp-001",
+    "type": "step_complete",
+    "restorable": true,
+    "restore_command": "git checkout abc123 -- file.ts"
+  }]
+}
+```
+
+### Error Taxonomy
+
+19 error codes across 4 categories with recovery strategies:
+- **E0xx**: Recoverable (retry with backoff)
+- **E1xx**: Soft errors (alternative approach)
+- **E2xx**: Hard errors (escalate to user)
+- **E3xx**: Validation errors (fix and retry)
+
+### Enhanced YAML Frontmatter
+
+Each expert now has structured metadata with tool examples:
 
 ```yaml
 ---
 name: n8n-expert
+version: "3.1"
 description: |
   n8n workflow automation expert. Deep knowledge of workflow structure,
   node types, Code node syntax, webhooks, and automation patterns.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - WebFetch
-  - WebSearch
-model: sonnet
+
+# Tool categories for progressive loading
+tools:
+  core: [Read, Edit, Glob, Grep]
+  extended: [Write, Bash]
+  deferred: [WebFetch, WebSearch]
+
+# Tool usage examples improve accuracy 72%→90%
+tool-examples:
+  Read:
+    - description: "Read workflow JSON"
+      parameters:
+        file_path: "services/workflow/workflows/Vigil-Guard-v1.7.0.json"
+      expected: "n8n workflow with nodes, connections, settings"
+
+# Routing triggers
 triggers:
-  - "n8n"
-  - "workflow"
-  - "Code node"
-  - "webhook"
+  primary: ["n8n", "workflow", "Code node"]
+  secondary: ["webhook", "automation", "node"]
+
+# Response schema
+output-schema:
+  type: object
+  required: [status, findings, actions_taken, ooda]
+
+model: sonnet
 ---
 ```
 
@@ -121,8 +180,9 @@ Workflows must end in clean state (tests pass, ready to merge):
 │              ┌───────────────────────────────┐                 │
 │              │     Project Context           │                 │
 │              │  - CLAUDE.md                  │                 │
-│              │  - progress.json v3.0         │                 │
-│              │  - Project files              │                 │
+│              │  - progress.json v3.1         │                 │
+│              │  - protocols.md               │                 │
+│              │  - tool-schema.md             │                 │
 │              └───────────────────────────────┘                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -540,18 +600,30 @@ triggers:
 
 See `.claude/core/protocols.md` for:
 
-1. **Progress File Protocol** (v3.0 schema)
-2. **Extended Thinking Protocol** (planning)
-3. **Documentation Protocol** (3-tier)
-4. **Expert Invocation Protocol** (with model)
-5. **Response Format Protocol** (emoji)
-6. **Error Handling Protocol**
-7. **Handoff Protocol**
-8. **Clean State Protocol**
-9. **YAML Frontmatter Protocol**
+1. **OODA Loop Protocol** (v3.1) - Structured decision-making
+2. **Progress File Protocol** (v3.1 schema) - Workflow state with OODA
+3. **Batch Operations Protocol** (v3.1) - Token-efficient multi-file ops
+4. **Tool Categories Protocol** (v3.1) - Progressive tool loading
+5. **Extended Thinking Protocol** - Planning phase
+6. **Documentation Protocol** - 3-tier knowledge
+7. **Expert Invocation Protocol** - Task tool patterns
+8. **Checkpoint Protocol** (v3.1) - State recovery
+9. **Retry Protocol** (v3.1) - Error recovery with 19 error codes
+10. **Response Format Protocol** - Emoji visibility
+11. **Error Handling Protocol** - Structured error reporting
+12. **Handoff Protocol** - Expert-to-expert transfer
+13. **Clean State Protocol** - Tests pass, ready to merge
+14. **YAML Frontmatter Protocol** - Agent metadata
+
+See `.claude/core/tool-schema.md` for:
+
+- Tool categories (Core/Extended/Deferred)
+- Token costs and loading strategy
+- Tool selection decision tree
+- Expert tool allocation matrix
 
 ---
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Status:** Production ready
-**Philosophy:** Technology experts + YAML frontmatter + model selection + parallel execution
+**Philosophy:** Technology experts + OODA protocol + tool categories + checkpointing + error recovery

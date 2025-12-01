@@ -56,19 +56,30 @@ When this command is invoked:
 4. Select strategy: single | sequential | parallel
 ```
 
-### Step 2: Expert Invocation
-For each expert, use Task tool with model parameter:
+### Step 2: Expert Invocation (v3.1)
+For each expert, use Task tool with OODA protocol:
 
 ```javascript
 Task(
   prompt: `You are ${expertName}, a world-class expert in ${technology}.
 
            Read .claude/agents/${expertName}/AGENT.md for your full knowledge base.
-           Read .claude/state/progress.json if multi-step workflow.
+           Read .claude/state/progress.json for workflow context.
+           Read .claude/core/protocols.md for OODA and error handling.
 
            Task: ${taskDescription}
 
-           After completion, update progress.json and return summary.`,
+           Follow OODA Protocol:
+           1. 🔍 OBSERVE: Read current state, examine relevant files
+           2. 🧭 ORIENT: Consider 2+ approaches, assess confidence
+           3. 🎯 DECIDE: Choose action with reasoning
+           4. ▶️ ACT: Execute and update progress.json
+
+           After completion:
+           - Update progress.json with OODA state and results
+           - Create checkpoint if step complete
+           - Report any errors with error codes (E001-E304)
+           - Return structured output with status`,
   subagent_type: "general-purpose",
   model: expertModel  // From frontmatter: "sonnet" or "opus"
 )
@@ -163,13 +174,13 @@ To create a custom recognizer in Presidio:
 ✨ Task Completed
 ```
 
-## State Management
+## State Management (v3.1)
 
-Multi-step workflows use `.claude/state/progress.json`:
+Multi-step workflows use `.claude/state/progress.json` with OODA tracking:
 
 ```json
 {
-  "version": "3.0",
+  "schema_version": "3.1",
   "workflow_id": "wf-20251127-abc123",
   "task": {
     "original_request": "Add SQL injection detection with tests",
@@ -183,26 +194,43 @@ Multi-step workflows use `.claude/state/progress.json`:
   },
   "status": "in_progress",
   "current_step": 2,
+  "token_budget": {
+    "allocated": 25000,
+    "used": 8500,
+    "remaining": 16500
+  },
   "steps": [
     {
+      "step": 1,
       "expert": "vitest-expert",
       "action": "create_fixture",
       "status": "completed",
+      "ooda": {
+        "observe": "No SQL injection tests exist in tests/fixtures/",
+        "orient": "Create fixture first (TDD). Options: UNION attacks, OR 1=1, DROP TABLE",
+        "decide": "Create comprehensive fixture with 5 attack vectors. Confidence: HIGH",
+        "act": "Write tool to create tests/fixtures/sql-injection.json"
+      },
       "duration_ms": 1200,
+      "tokens_used": 3200,
       "artifacts": ["tests/fixtures/sql-injection.json"]
-    },
-    {
-      "expert": "n8n-expert",
-      "action": "add_pattern",
-      "status": "in_progress"
-    },
-    {
-      "expert": "vitest-expert",
-      "action": "run_tests",
-      "status": "pending"
     }
   ],
-  "artifacts": {},
+  "checkpoints": [
+    {
+      "id": "cp-001",
+      "step_id": 1,
+      "timestamp": "2025-12-01T10:01:30Z",
+      "type": "step_complete",
+      "files_modified": ["tests/fixtures/sql-injection.json"],
+      "restorable": true
+    }
+  ],
+  "retry_policy": {
+    "max_retries": 3,
+    "current_retries": 0,
+    "backoff_seconds": [5, 15, 45]
+  },
   "errors": []
 }
 ```
