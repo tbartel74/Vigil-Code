@@ -187,7 +187,7 @@ Workflows must end in clean state (tests pass, ready to merge):
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Available Experts (12)
+## Available Experts (14)
 
 | Expert | Model | Triggers | Specialization |
 |--------|-------|----------|----------------|
@@ -203,6 +203,8 @@ Workflows must end in clean state (tests pass, ready to merge):
 | `git-expert` | sonnet | git, commit, branch | Version control, PRs |
 | `python-expert` | sonnet | python, flask, fastapi | Flask, data processing |
 | `tailwind-expert` | sonnet | tailwind, CSS, styling | Utility CSS, responsive |
+| `kubernetes-expert` | sonnet | kubernetes, k8s, kubectl, pod | Cluster ops, deployments |
+| `helm-expert` | sonnet | helm, chart, values.yaml | Charts, releases, templating |
 
 ## How It Works
 

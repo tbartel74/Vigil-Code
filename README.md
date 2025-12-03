@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blue.svg)](https://claude.ai/code)
-[![Experts: 12](https://img.shields.io/badge/Experts-12-green.svg)](#technology-experts-12)
+[![Experts: 14](https://img.shields.io/badge/Experts-14-green.svg)](#technology-experts-14)
 [![Version: 3.1](https://img.shields.io/badge/Version-3.1-brightgreen.svg)]()
 
 > **Documentation available in:** [Polski (Polish)](docs/README.pl.md)
@@ -156,7 +156,7 @@ Claude Code:
 
 ---
 
-## Technology Experts (12)
+## Technology Experts (14)
 
 Each expert is a `.claude/agents/[name]/AGENT.md` file with YAML frontmatter + Markdown content.
 
@@ -174,6 +174,8 @@ Each expert is a `.claude/agents/[name]/AGENT.md` file with YAML frontmatter + M
 | `git-expert` | sonnet | git, commit, branch | Version control, PRs |
 | `python-expert` | sonnet | python, flask, fastapi | Python APIs |
 | `tailwind-expert` | sonnet | tailwind, CSS, styling | Utility CSS, responsive |
+| `kubernetes-expert` | sonnet | kubernetes, k8s, kubectl, pod | Cluster ops, deployments, RBAC |
+| `helm-expert` | sonnet | helm, chart, values.yaml | Charts, releases, templating |
 
 ---
 
@@ -439,18 +441,18 @@ implementation example
 ### Step 1: Create Directory
 
 ```bash
-mkdir -p .claude/agents/kubernetes-expert
+mkdir -p .claude/agents/terraform-expert
 ```
 
 ### Step 2: Create AGENT.md
 
 ```yaml
 ---
-name: kubernetes-expert
+name: terraform-expert
 version: "3.1"
 description: |
-  Kubernetes and cloud-native expert. Deep knowledge of deployments,
-  services, ingress, RBAC, and operators.
+  Terraform and Infrastructure as Code expert. Deep knowledge of providers,
+  resources, modules, state management, and cloud deployments.
 
 model: sonnet
 thinking: extended
@@ -462,72 +464,76 @@ tools:
 
 tool-examples:
   Bash:
-    - description: "Check pod status"
+    - description: "Initialize Terraform"
       parameters:
-        command: "kubectl get pods -n default"
-      expected: "List of pods with their status"
+        command: "terraform init"
+      expected: "Provider plugins downloaded"
+    - description: "Plan infrastructure changes"
+      parameters:
+        command: "terraform plan"
+      expected: "Execution plan with resources to create/modify/destroy"
 
 triggers:
   primary:
-    - "kubernetes"
-    - "k8s"
-    - "kubectl"
-    - "pod"
+    - "terraform"
+    - "tf"
+    - "infrastructure"
+    - "IaC"
   secondary:
-    - "deployment"
-    - "service"
-    - "ingress"
-    - "helm"
+    - "provider"
+    - "module"
+    - "state"
+    - "resource"
 
 output-schema:
   type: object
   required: [status, findings, actions_taken, ooda]
 ---
 
-# Kubernetes Expert Agent
+# Terraform Expert Agent
 
-You are a world-class Kubernetes and cloud-native expert.
+You are a world-class Terraform and Infrastructure as Code expert.
 
 ## Core Knowledge (Tier 1)
 
-### Pod Management
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-pod
-spec:
-  containers:
-  - name: app
-    image: nginx:1.21
-    resources:
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
+### Resource Definition
+```hcl
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "WebServer"
+  }
+}
 ```
 
-### Debugging Commands
+### Common Commands
 ```bash
-kubectl logs pod-name -f
-kubectl exec -it pod-name -- /bin/sh
-kubectl describe pod pod-name
+terraform init      # Initialize working directory
+terraform plan      # Preview changes
+terraform apply     # Apply changes
+terraform destroy   # Destroy infrastructure
 ```
 
 ## Documentation Sources (Tier 2)
 
 | Source | URL |
 |--------|-----|
-| K8s Docs | https://kubernetes.io/docs/ |
+| Terraform Docs | https://developer.hashicorp.com/terraform/docs |
 
 ## Critical Rules
 
-- Always use resource limits
-- Never use latest tag in production
+- Always use remote state in production
+- Never commit .tfstate files to git
+- Use variables for sensitive data
 ```
 
 ### Step 3: Expert Auto-Registers
 
 The system reads triggers from frontmatter and routes appropriate queries.
+
+> **Note:** Kubernetes and Helm experts are already included in the system. See `.claude/agents/kubernetes-expert/` and `.claude/agents/helm-expert/` for full implementations.
 
 ---
 

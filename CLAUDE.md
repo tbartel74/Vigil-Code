@@ -144,7 +144,7 @@ Co-Authored-By: Claude <...>   # ← FORBIDDEN
 ✅ NEW: Agents are technology experts + read project context from files
 ```
 
-**Available Technology Experts (12):**
+**Available Technology Experts (14):**
 
 | Expert | Technology | Use For |
 |--------|------------|---------|
@@ -160,6 +160,8 @@ Co-Authored-By: Claude <...>   # ← FORBIDDEN
 | `git-expert` | Git | Version control, commits |
 | `python-expert` | Python | Flask, FastAPI |
 | `tailwind-expert` | Tailwind CSS | Styling |
+| `kubernetes-expert` | Kubernetes | Cluster ops, pods, deployments |
+| `helm-expert` | Helm | Charts, releases, templating |
 
 **Decision Tree:**
 
@@ -735,7 +737,7 @@ The agent system has been redesigned from project-specific agents to **universal
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Available Technology Experts (12)
+### Available Technology Experts (14)
 
 | Expert | Technology | Specialization |
 |--------|------------|----------------|
@@ -751,6 +753,8 @@ The agent system has been redesigned from project-specific agents to **universal
 | `git-expert` | Git/GitHub | Version control, workflows, PRs |
 | `python-expert` | Python | Flask, FastAPI, data processing |
 | `tailwind-expert` | Tailwind CSS | Utility CSS, responsive design |
+| `kubernetes-expert` | Kubernetes | Cluster ops, pods, services, RBAC |
+| `helm-expert` | Helm | Charts, releases, values, templating |
 
 ### 3-Tier Knowledge Model
 
@@ -1566,5 +1570,7 @@ npm test             # Run tests (in services/workflow/)
 | PII | `presidio-expert` | microsoft.github.io/presidio |
 | Git | `git-expert` | git-scm.com |
 | Python | `python-expert` | docs.python.org |
+| Kubernetes | `kubernetes-expert` | kubernetes.io/docs |
+| Helm | `helm-expert` | helm.sh/docs |
 
 **Full expert docs:** `.claude/agents/[expert-name]/AGENT.md`

@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blue.svg)](https://claude.ai/code)
-[![Experts: 12](https://img.shields.io/badge/Experts-12-green.svg)](#eksperci-technologiczni-12)
+[![Experts: 14](https://img.shields.io/badge/Experts-14-green.svg)](#eksperci-technologiczni-14)
 [![Version: 3.1](https://img.shields.io/badge/Version-3.1-brightgreen.svg)]()
 
 ---
@@ -85,7 +85,7 @@ cp CLAUDE.md /path/to/your/project/
 ```
 your-project/
 ├── .claude/
-│   ├── agents/           # 12 ekspertów technologicznych
+│   ├── agents/           # 14 ekspertów technologicznych
 │   ├── commands/         # 23 komendy slash
 │   ├── skills/           # 18 kontekstów domenowych
 │   ├── core/             # Protokoły i schematy
@@ -154,7 +154,7 @@ Claude Code:
 
 ---
 
-## Eksperci technologiczni (12)
+## Eksperci technologiczni (14)
 
 Każdy ekspert to plik `.claude/agents/[nazwa]/AGENT.md` z YAML frontmatter + treścią Markdown.
 
@@ -172,6 +172,8 @@ Każdy ekspert to plik `.claude/agents/[nazwa]/AGENT.md` z YAML frontmatter + tr
 | `git-expert` | sonnet | git, commit, branch | Version control, PRs |
 | `python-expert` | sonnet | python, flask, fastapi | Python APIs |
 | `tailwind-expert` | sonnet | tailwind, CSS, styling | Utility CSS, responsive |
+| `kubernetes-expert` | sonnet | kubernetes, k8s, kubectl, pod | Operacje klastrów, deployments, RBAC |
+| `helm-expert` | sonnet | helm, chart, values.yaml | Charts, releases, templating |
 
 ---
 
@@ -437,18 +439,18 @@ przykład implementacji
 ### Krok 1: Utwórz katalog
 
 ```bash
-mkdir -p .claude/agents/kubernetes-expert
+mkdir -p .claude/agents/terraform-expert
 ```
 
 ### Krok 2: Utwórz AGENT.md
 
 ```yaml
 ---
-name: kubernetes-expert
+name: terraform-expert
 version: "3.1"
 description: |
-  Kubernetes i cloud-native expert. Głęboka wiedza o deploymentach,
-  services, ingress, RBAC i operatorach.
+  Terraform i Infrastructure as Code expert. Głęboka wiedza o providers,
+  modules, state management i best practices.
 
 model: sonnet
 thinking: extended
@@ -460,68 +462,74 @@ tools:
 
 tool-examples:
   Bash:
-    - description: "Sprawdź status podów"
+    - description: "Planuj zmiany infrastruktury"
       parameters:
-        command: "kubectl get pods -n default"
-      expected: "Lista podów z ich statusem"
+        command: "terraform plan -out=tfplan"
+      expected: "Szczegółowy plan zmian"
 
 triggers:
   primary:
-    - "kubernetes"
-    - "k8s"
-    - "kubectl"
-    - "pod"
+    - "terraform"
+    - "tf"
+    - "hcl"
+    - "provider"
   secondary:
-    - "deployment"
-    - "service"
-    - "ingress"
-    - "helm"
+    - "module"
+    - "state"
+    - "infrastructure"
+    - "iac"
 
 output-schema:
   type: object
   required: [status, findings, actions_taken, ooda]
 ---
 
-# Kubernetes Expert Agent
+# Terraform Expert Agent
 
-Jesteś światowej klasy ekspertem Kubernetes i cloud-native.
+Jesteś światowej klasy ekspertem Terraform i Infrastructure as Code.
 
 ## Core Knowledge (Tier 1)
 
-### Pod Management
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-pod
-spec:
-  containers:
-  - name: app
-    image: nginx:1.21
-    resources:
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
+### Provider Configuration
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
 ```
 
-### Debugging Commands
-```bash
-kubectl logs pod-name -f
-kubectl exec -it pod-name -- /bin/sh
-kubectl describe pod pod-name
+### Module Structure
+```hcl
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.0.0"
+
+  name = "my-vpc"
+  cidr = "10.0.0.0/16"
+}
 ```
 
 ## Documentation Sources (Tier 2)
 
 | Źródło | URL |
 |--------|-----|
-| K8s Docs | https://kubernetes.io/docs/ |
+| Terraform Docs | https://developer.hashicorp.com/terraform/docs |
 
 ## Critical Rules
 
-- ✅ Zawsze używaj resource limits
-- ❌ Nigdy nie używaj latest tag w produkcji
+- ✅ Zawsze używaj version constraints dla providers
+- ❌ Nigdy nie commituj terraform.tfstate do repo
 ```
+
+> **Uwaga:** Eksperci Kubernetes i Helm są już wbudowani w system. Zobacz `.claude/agents/kubernetes-expert/` i `.claude/agents/helm-expert/` dla pełnych implementacji.
 
 ### Krok 3: Ekspert automatycznie się rejestruje
 
