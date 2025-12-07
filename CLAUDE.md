@@ -144,7 +144,7 @@ Co-Authored-By: Claude <...>   # ← FORBIDDEN
 ✅ NEW: Agents are technology experts + read project context from files
 ```
 
-**Available Technology Experts (14):**
+**Available Technology Experts (16):**
 
 | Expert | Technology | Use For |
 |--------|------------|---------|
@@ -162,6 +162,8 @@ Co-Authored-By: Claude <...>   # ← FORBIDDEN
 | `tailwind-expert` | Tailwind CSS | Styling |
 | `kubernetes-expert` | Kubernetes | Cluster ops, pods, deployments |
 | `helm-expert` | Helm | Charts, releases, templating |
+| `nats-expert` | NATS | Messaging, JetStream, queues |
+| `redis-expert` | Redis | Caching, rate limiting |
 
 **Decision Tree:**
 
@@ -737,7 +739,7 @@ The agent system has been redesigned from project-specific agents to **universal
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Available Technology Experts (14)
+### Available Technology Experts (16)
 
 | Expert | Technology | Specialization |
 |--------|------------|----------------|
@@ -755,6 +757,8 @@ The agent system has been redesigned from project-specific agents to **universal
 | `tailwind-expert` | Tailwind CSS | Utility CSS, responsive design |
 | `kubernetes-expert` | Kubernetes | Cluster ops, pods, services, RBAC |
 | `helm-expert` | Helm | Charts, releases, values, templating |
+| `nats-expert` | NATS | JetStream, streams, consumers, queues |
+| `redis-expert` | Redis | Caching, rate limiting, sessions |
 
 ### 3-Tier Knowledge Model
 
@@ -1572,5 +1576,7 @@ npm test             # Run tests (in services/workflow/)
 | Python | `python-expert` | docs.python.org |
 | Kubernetes | `kubernetes-expert` | kubernetes.io/docs |
 | Helm | `helm-expert` | helm.sh/docs |
+| Messaging | `nats-expert` | docs.nats.io |
+| Caching | `redis-expert` | redis.io/docs |
 
 **Full expert docs:** `.claude/agents/[expert-name]/AGENT.md`

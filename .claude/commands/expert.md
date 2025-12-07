@@ -45,6 +45,8 @@ Force routing to specific expert with bracket syntax:
 | `tailwind-expert` | tailwind, CSS, styling, responsive, dark mode, utility, design | sonnet |
 | `kubernetes-expert` | kubernetes, k8s, kubectl, pod, deployment, service, namespace, cluster, node, CrashLoopBackOff, ingress, configmap, secret, pvc, statefulset, daemonset | sonnet |
 | `helm-expert` | helm, chart, values.yaml, Chart.yaml, release, repository, template, helm install, helm upgrade, subchart, helmfile | sonnet |
+| `nats-expert` | nats, jetstream, message queue, stream, consumer, pub/sub, request-reply, exactly-once, ack, work queue, durable | sonnet |
+| `redis-expert` | redis, cache, rate limit, session, sorted set, TTL, cluster, sentinel, lua script, pub/sub, expiration | sonnet |
 
 ## Execution Protocol
 

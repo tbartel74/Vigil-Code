@@ -187,7 +187,7 @@ Workflows must end in clean state (tests pass, ready to merge):
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Available Experts (14)
+## Available Experts (16)
 
 | Expert | Model | Triggers | Specialization |
 |--------|-------|----------|----------------|
@@ -205,6 +205,8 @@ Workflows must end in clean state (tests pass, ready to merge):
 | `tailwind-expert` | sonnet | tailwind, CSS, styling | Utility CSS, responsive |
 | `kubernetes-expert` | sonnet | kubernetes, k8s, kubectl, pod | Cluster ops, deployments |
 | `helm-expert` | sonnet | helm, chart, values.yaml | Charts, releases, templating |
+| `nats-expert` | sonnet | nats, jetstream, stream | Messaging, queues |
+| `redis-expert` | sonnet | redis, cache, rate limit | Caching, sessions |
 
 ## How It Works
 

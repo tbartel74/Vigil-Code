@@ -165,6 +165,10 @@ Use multiple experts when task spans domains:
 | git-expert | sonnet | git, commit, branch | Version control |
 | python-expert | sonnet | python, flask, fastapi | Python APIs |
 | tailwind-expert | sonnet | tailwind, css, styling | Styling |
+| kubernetes-expert | sonnet | kubernetes, k8s, pod | Cluster ops |
+| helm-expert | sonnet | helm, chart, values | Chart management |
+| nats-expert | sonnet | nats, jetstream, stream | Messaging, queues |
+| redis-expert | sonnet | redis, cache, rate limit | Caching, sessions |
 
 ## Workflow Management
 
