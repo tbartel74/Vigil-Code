@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blue.svg)](https://claude.ai/code)
-[![Experts: 14](https://img.shields.io/badge/Experts-14-green.svg)](#technology-experts-14)
+[![Experts: 16](https://img.shields.io/badge/Experts-16-green.svg)](#technology-experts-16)
 [![Version: 3.1](https://img.shields.io/badge/Version-3.1-brightgreen.svg)]()
 
 > **Documentation available in:** [Polski (Polish)](docs/README.pl.md)
@@ -87,7 +87,7 @@ cp CLAUDE.md /path/to/your/project/
 ```
 your-project/
 ├── .claude/
-│   ├── agents/           # 12 technology experts
+│   ├── agents/           # 16 technology experts
 │   ├── commands/         # 23 slash commands
 │   ├── skills/           # 18 domain contexts
 │   ├── core/             # Protocols and schemas
@@ -156,7 +156,7 @@ Claude Code:
 
 ---
 
-## Technology Experts (14)
+## Technology Experts (16)
 
 Each expert is a `.claude/agents/[name]/AGENT.md` file with YAML frontmatter + Markdown content.
 
@@ -176,6 +176,8 @@ Each expert is a `.claude/agents/[name]/AGENT.md` file with YAML frontmatter + M
 | `tailwind-expert` | sonnet | tailwind, CSS, styling | Utility CSS, responsive |
 | `kubernetes-expert` | sonnet | kubernetes, k8s, kubectl, pod | Cluster ops, deployments, RBAC |
 | `helm-expert` | sonnet | helm, chart, values.yaml | Charts, releases, templating |
+| `nats-expert` | sonnet | nats, jetstream, stream | Messaging, queues, pub/sub |
+| `redis-expert` | sonnet | redis, cache, rate limit | Caching, sessions, rate limiting |
 
 ---
 
