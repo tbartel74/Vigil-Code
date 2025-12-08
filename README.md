@@ -210,8 +210,8 @@ Run comprehensive code audits using the `/audit-code` command:
 ### Rating System
 
 - 🟢 **OK** - Meets professional standards
-- 🟡 **DO_POPRAWY** - Fix this sprint
-- 🔴 **KRYTYCZNE** - Immediate action required
+- 🟡 **NEEDS_IMPROVEMENT** - Fix this sprint
+- 🔴 **CRITICAL** - Immediate action required
 
 ### Output Files
 

@@ -57,7 +57,7 @@ For each category (or selected categories):
 1. Execute category-specific checks
 2. Run batch operations (grep, find, npm audit)
 3. Calculate score based on checklist
-4. Assign rating (🟢 OK / 🟡 DO_POPRAWY / 🔴 KRYTYCZNE)
+4. Assign rating (🟢 OK / 🟡 NEEDS_IMPROVEMENT / 🔴 CRITICAL)
 5. Record findings (positive, warnings, critical)
 ```
 
@@ -255,8 +255,8 @@ Human-readable markdown summary for documentation.
 | Rating | Symbol | Meaning | Action |
 |--------|--------|---------|--------|
 | OK | 🟢 | Meets standards | Maintenance mode |
-| DO_POPRAWY | 🟡 | Needs improvement | Fix this sprint |
-| KRYTYCZNE | 🔴 | Critical issue | Immediate action |
+| NEEDS_IMPROVEMENT | 🟡 | Needs improvement | Fix this sprint |
+| CRITICAL | 🔴 | Critical issue | Immediate action |
 
 ## Grading Scale
 

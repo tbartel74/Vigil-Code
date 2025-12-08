@@ -84,12 +84,12 @@
         "critical_issues": {
           "type": "number",
           "minimum": 0,
-          "description": "Count of KRYTYCZNE findings"
+          "description": "Count of CRITICAL findings"
         },
         "warnings": {
           "type": "number",
           "minimum": 0,
-          "description": "Count of DO_POPRAWY findings"
+          "description": "Count of NEEDS_IMPROVEMENT findings"
         },
         "executive_summary": {
           "type": "string",
@@ -126,7 +126,7 @@
           },
           "rating": {
             "type": "string",
-            "enum": ["OK", "DO_POPRAWY", "KRYTYCZNE"],
+            "enum": ["OK", "NEEDS_IMPROVEMENT", "CRITICAL"],
             "description": "Category rating"
           },
           "checklist": {

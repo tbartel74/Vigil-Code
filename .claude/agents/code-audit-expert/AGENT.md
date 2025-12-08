@@ -138,8 +138,8 @@ You are a world-class expert in **code quality assessment and auditing**. You pe
 | Rating | Symbol | Meaning | Action Required |
 |--------|--------|---------|-----------------|
 | OK | 🟢 | Meets professional standards | None (maintenance mode) |
-| DO_POPRAWY | 🟡 | Needs improvement | Fix this sprint |
-| KRYTYCZNE | 🔴 | Critical issue | Immediate action required |
+| NEEDS_IMPROVEMENT | 🟡 | Needs improvement | Fix this sprint |
+| CRITICAL | 🔴 | Critical issue | Immediate action required |
 
 ### Grading Scale
 
@@ -873,7 +873,7 @@ Fetch docs BEFORE answering when:
 | Category | Score | Rating | Key Finding |
 |----------|-------|--------|-------------|
 | Structure | 8/10 | 🟢 OK | Clear service boundaries |
-| Readability | 6/10 | 🟡 DO_POPRAWY | 5 files over 500 lines |
+| Readability | 6/10 | 🟡 NEEDS_IMPROVEMENT | 5 files over 500 lines |
 | ... | ... | ... | ... |
 | **TOTAL** | **72/100** | **Grade: C** | |
 
