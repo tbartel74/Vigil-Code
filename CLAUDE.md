@@ -666,9 +666,9 @@ sqlite3 /path/to/n8n/database.sqlite "SELECT nodes, connections, settings FROM w
 # 3. Save to services/workflow/workflows/Vigil-Guard-vX.X.X.json
 
 # 4. TELL USER TO IMPORT IMMEDIATELY:
-#    "Workflow v1.7.0 jest gotowy do importu.
-#     Wgraj plik: services/workflow/workflows/Vigil-Guard-v1.7.0.json
-#     do n8n (Menu → Import from File)"
+#    "Workflow vX.X.X is ready to import.
+#     Import file: services/workflow/workflows/Vigil-Guard-vX.X.X.json
+#     to n8n (Menu → Import from File)"
 
 # 5. Test after user imports
 ```
@@ -683,12 +683,12 @@ sqlite3 /path/to/n8n/database.sqlite "SELECT nodes, connections, settings FROM w
 **Common Mistake to AVOID:**
 ```bash
 # ❌ WRONG: Editing JSON and assuming n8n will use it
-Edit Vigil-Guard-v1.7.0.json
+Edit Vigil-Guard-vX.X.X.json
 # n8n still uses OLD version from database!
 
 # ✅ CORRECT: Edit JSON + Tell user to import
-Edit Vigil-Guard-v1.7.0.json
-echo "MUSISZ WGRAĆ ten plik do n8n żeby zmiany zadziałały!"
+Edit Vigil-Guard-vX.X.X.json
+echo "You MUST import this file to n8n for changes to take effect!"
 ```
 
 ## ⚠️ Technology Expert Agent System (v3.0)
@@ -886,7 +886,7 @@ vigil-guard/
 │   ├── workflow/                   # n8n detection engine
 │   │   ├── config/                 # ⚠️ NEVER edit directly! Use Web UI
 │   │   ├── tests/ (100+ tests)    # Vitest E2E test suite
-│   │   └── workflows/              # Vigil-Guard-v1.6.11.json
+│   │   └── workflows/              # Vigil-Guard-vX.X.X.json
 │   ├── web-ui/                     # React + Express configuration interface
 │   │   ├── frontend/               # React 18 + Vite + Tailwind v4
 │   │   └── backend/                # Express + JWT + SQLite + ClickHouse

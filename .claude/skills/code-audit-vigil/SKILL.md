@@ -56,7 +56,7 @@ vigil-guard/
 │   │   │   ├── e2e/                # Integration tests
 │   │   │   └── fixtures/           # Test payloads
 │   │   └── workflows/              # n8n JSON exports
-│   │       └── Vigil-Guard-v1.7.9.json
+│   │       └── Vigil-Guard-vX.X.X.json
 │   │
 │   ├── web-ui/
 │   │   ├── frontend/               # React 18 + Vite + Tailwind v4

@@ -29,7 +29,7 @@ tool-examples:
   Read:
     - description: "Read n8n workflow JSON"
       parameters:
-        file_path: "services/workflow/workflows/Vigil-Guard-v1.7.0.json"
+        file_path: "services/workflow/workflows/Vigil-Guard-vX.X.X.json"
       expected: "Full workflow JSON with 40+ nodes"
     - description: "Read rules configuration"
       parameters:

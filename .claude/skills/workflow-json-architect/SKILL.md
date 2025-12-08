@@ -63,7 +63,7 @@ WORKFLOW:
 
 1. Open n8n GUI: http://localhost:5678
 2. Click menu (≡) → **Import from File**
-3. Select: `services/workflow/workflows/Vigil-Guard-v1.8.1.json`
+3. Select: `services/workflow/workflows/Vigil-Guard-vX.X.X.json`
 4. Confirm import
 5. Activate workflow (toggle switch)
 
@@ -617,8 +617,8 @@ BREAKING: Requires ClickHouse schema migration (see docs/MIGRATION_v1.8.1.md)
 ### Backup Before Migration
 ```bash
 # Before modifying workflow JSON
-cp services/workflow/workflows/Vigil-Guard-v1.8.1.json \
-   services/workflow/workflows/backups/Vigil-Guard-v1.8.1-$(date +%Y%m%d).json
+cp services/workflow/workflows/Vigil-Guard-vX.X.X.json \
+   services/workflow/workflows/backups/Vigil-Guard-vX.X.X-$(date +%Y%m%d).json
 ```
 
 ### Testing Changes
@@ -762,7 +762,7 @@ const [result1, result2] = await Promise.all([
 sqlite3 /path/to/n8n/database.sqlite "SELECT updatedAt FROM workflow_entity WHERE name LIKE 'Vigil%' ORDER BY updatedAt DESC LIMIT 1"
 
 # Compare with JSON file timestamp
-stat services/workflow/workflows/Vigil-Guard-v1.8.1.json | grep Modify
+stat services/workflow/workflows/Vigil-Guard-vX.X.X.json | grep Modify
 ```
 
 **Solution:**
@@ -772,7 +772,7 @@ stat services/workflow/workflows/Vigil-Guard-v1.8.1.json | grep Modify
 You MUST import the file to n8n GUI:
 1. Open http://localhost:5678
 2. Menu (≡) → Import from File
-3. Select: `services/workflow/workflows/Vigil-Guard-v1.8.1.json`
+3. Select: `services/workflow/workflows/Vigil-Guard-vX.X.X.json`
 4. Confirm import and activate
 ```
 
@@ -828,12 +828,11 @@ services:
 ## Reference Files
 
 ### Workflow Versions
-- **v1.8.1** (Current): `services/workflow/workflows/Vigil-Guard-v1.8.1.json`
-- **v1.8.1**: `services/workflow/workflows/Vigil-Guard-v1.8.1.json`
-- **v1.8.1**: `services/workflow/workflows/backups/Vigil-Guard-v1.8.1.json`
+- **(Current)**: `services/workflow/workflows/Vigil-Guard-vX.X.X.json`
+- **Backups**: `services/workflow/workflows/backups/Vigil-Guard-vX.X.X.json`
 
 ### Documentation
-- Architecture: `docs/ARCHITECTURE_v1.8.1.md`
+- Architecture: `docs/ARCHITECTURE.md`
 - Migration guides: `docs/MIGRATION_v*.md`
 - n8n docs: https://docs.n8n.io/
 
@@ -847,19 +846,19 @@ services:
 ### Essential Commands
 ```bash
 # View workflow structure (pretty print)
-cat services/workflow/workflows/Vigil-Guard-v1.8.1.json | jq .
+cat services/workflow/workflows/Vigil-Guard-vX.X.X.json | jq .
 
 # Count nodes
-jq '.nodes | length' services/workflow/workflows/Vigil-Guard-v1.8.1.json
+jq '.nodes | length' services/workflow/workflows/Vigil-Guard-vX.X.X.json
 
 # List node names
-jq -r '.nodes[].name' services/workflow/workflows/Vigil-Guard-v1.8.1.json
+jq -r '.nodes[].name' services/workflow/workflows/Vigil-Guard-vX.X.X.json
 
 # Find specific node
-jq '.nodes[] | select(.name == "PII_Redactor_v2")' services/workflow/workflows/Vigil-Guard-v1.8.1.json
+jq '.nodes[] | select(.name == "PII_Redactor_v2")' services/workflow/workflows/Vigil-Guard-vX.X.X.json
 
 # Extract Code node JavaScript
-jq -r '.nodes[] | select(.name == "Pattern_Matching_Engine") | .parameters.jsCode' services/workflow/workflows/Vigil-Guard-v1.8.1.json
+jq -r '.nodes[] | select(.name == "Pattern_Matching_Engine") | .parameters.jsCode' services/workflow/workflows/Vigil-Guard-vX.X.X.json
 ```
 
 ### Node Checklist (Before Commit)

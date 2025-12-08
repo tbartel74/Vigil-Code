@@ -87,7 +87,7 @@ tool-examples:
   Read:
     - description: "Read workflow JSON"
       parameters:
-        file_path: "services/workflow/workflows/Vigil-Guard-v1.7.0.json"
+        file_path: "services/workflow/workflows/Vigil-Guard-vX.X.X.json"
       expected: "n8n workflow with nodes, connections, settings"
 
 # Routing triggers
