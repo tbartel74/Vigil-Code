@@ -32,7 +32,7 @@ try {
   console.log('This file is created automatically when agents start executing.');
   console.log('');
   console.log('To initialize the system, try:');
-  console.log('  • /vg-orchestrate [task]');
+  console.log('  • /orchestrate [task]');
   console.log('  • Invoke any agent via Skill tool');
   return;
 }
@@ -68,9 +68,9 @@ function elapsedTime(startIsoTimestamp) {
   return (diffMs / 1000).toFixed(1); // seconds with 1 decimal
 }
 
-// Agent name formatter (remove vg- prefix)
+// Agent name formatter
 function formatAgentName(agentName) {
-  return agentName.replace(/^vg-/, '');
+  return agentName;
 }
 ```
 

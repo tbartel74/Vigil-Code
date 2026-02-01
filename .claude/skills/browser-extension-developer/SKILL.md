@@ -430,28 +430,28 @@ function getCanvasFingerprint() {
 
 ## Integration Points
 
-### With n8n-vigil-workflow (v2.0.0):
+### With Vigil Guard API (v3.0.0):
 ```yaml
 when: Extension sends request
 action:
-  1. Workflow receives browser_metadata + clientId
-  2. 3-branch parallel detection executes
-  3. Arbiter v2 makes decision
-  4. Response includes branch scores
-  5. Log to ClickHouse with branch columns
+  1. API receives browser_metadata + clientId
+  2. NATS workers process in parallel (detection, semantic, PII, llm-guard)
+  3. Arbiter makes final decision
+  4. Response includes worker scores
+  5. Log to ClickHouse via logging-worker
 ```
 
-### With clickhouse-grafana-monitoring (v2.0.0):
+### ClickHouse Analytics Query Example:
 ```sql
--- Query extension usage with branch data
+-- Query extension usage with worker data
 SELECT
   client_id,
   count() as requests,
-  avg(branch_a_score) as avg_heuristics,
-  avg(branch_b_score) as avg_semantic,
-  avg(branch_c_score) as avg_llm_guard,
-  countIf(arbiter_decision = 'BLOCK') as blocked
-FROM n8n_logs.events_processed
+  avg(detection_score) as avg_detection,
+  avg(semantic_score) as avg_semantic,
+  avg(pii_score) as avg_pii,
+  countIf(final_decision = 'BLOCK') as blocked
+FROM vigil.detection_events
 WHERE client_id LIKE 'client_%'
 GROUP BY client_id
 ORDER BY requests DESC
@@ -462,45 +462,45 @@ ORDER BY requests DESC
 ### Local Testing
 ```bash
 # 1. Load extension in Chrome
-chrome://extensions/ → Enable Developer Mode → Load unpacked → Select plugin/
+chrome://extensions/ → Enable Developer Mode → Load unpacked → Select apps/extension/chrome/
 
 # 2. Test on ChatGPT
 open https://chat.openai.com/
 
-# 3. Check console for v2.0.0 response
-F12 → Console → Look for "Vigil Guard" messages with branch scores
+# 3. Check console for response
+F12 → Console → Look for "Vigil Guard" messages with worker scores
 
-# 4. Verify webhook (check for arbiter_decision)
-docker logs vigil-n8n | grep "arbiter_decision"
+# 4. Verify API logs
+docker logs vigil-api | grep "final_decision"
 ```
 
 ### Debugging
 ```javascript
-// background.js - Add v2.0.0 logging
-console.log('[Vigil Guard v2.0.0] Analyzing prompt:', request.data);
-console.log('[Vigil Guard v2.0.0] Response:', {
-  arbiter_decision: response.arbiter_decision,
-  branch_a: response.branch_a_score,
-  branch_b: response.branch_b_score,
-  branch_c: response.branch_c_score
+// background.js - Add logging
+console.log('[Vigil Guard] Analyzing prompt:', request.data);
+console.log('[Vigil Guard] Response:', {
+  final_decision: response.final_decision,
+  detection_score: response.detection_score,
+  semantic_score: response.semantic_score,
+  pii_score: response.pii_score
 });
 ```
 
 ## Troubleshooting
 
-**v2.0.0 response not recognized:**
+**Response format not recognized:**
 ```javascript
-// Check for both old and new response formats
-const decision = response.arbiter_decision || response.status;
+// Check for response format
+const decision = response.final_decision || response.status;
 const categories = response.detected_categories || response.detectedCategories || [];
 ```
 
-**Branch scores undefined:**
+**Worker scores undefined:**
 ```javascript
-// Branch C may timeout - handle gracefully
-const branchInfo = response.branch_a_score !== undefined
-  ? `Scores: A=${response.branch_a_score}, B=${response.branch_b_score}, C=${response.branch_c_score || 'N/A'}`
-  : 'Branch scores unavailable';
+// Some workers may timeout - handle gracefully
+const scoreInfo = response.detection_score !== undefined
+  ? `Scores: detection=${response.detection_score}, semantic=${response.semantic_score}, pii=${response.pii_score || 'N/A'}`
+  : 'Worker scores unavailable';
 ```
 
 ## Quick Reference

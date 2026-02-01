@@ -48,6 +48,12 @@ coverage/
 # Claude Code UI State (runtime-generated)
 .claude-code/
 
+# Audit logs (runtime-generated)
+.claude/audit_logs/
+
+# TSC Cache (runtime-generated)
+.claude/tsc-cache/
+
 # Build outputs
 dist/
 build/

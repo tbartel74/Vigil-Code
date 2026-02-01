@@ -1,636 +1,241 @@
-# Technology Expert Agent System v3.1
+# Technology Expert Agent System v4.1
 
-A universal, technology-focused agent system for Claude Code. Agents are experts in **technologies**, not specific projects.
+A modernized, lightweight agent system for Claude Code based on **Anthropic's Context Engineering Best Practices (2025-2026)**.
 
-> **v3.1 Highlights:** OODA Protocol, Tool Categories, Checkpointing, Error Recovery
+> **v4.1 Highlights:**
+> - 7 consolidated technology experts (down from 17)
+> - Cross-session memory system
+> - Python-based hooks (zero dependencies)
+> - Claude 4.5 handles token management automatically
 
 ## Philosophy
 
 ```
-❌ OLD: Agents know your project internals
-✅ NEW: Agents are technology experts + read project context from files
+Skills   = HOW to do things (procedures, workflows)
+Agents   = WHO does the work (technology expertise)
 ```
 
-**Benefits:**
-- **Reusable**: Same agents work across any project
-- **Maintainable**: Update technology knowledge, not project-specific code
-- **Expert-level**: Deep specialization in one technology per agent
-- **Future-proof**: Your code evolves, agents adapt via context
-- **Documentation-aware**: Experts fetch official docs when uncertain
+**Key Principles:**
+- **No orchestrator** - Claude Code handles routing natively
+- **Consolidated experts** - Fewer, more focused experts
+- **Memory system** - Cross-session learning persistence
+- **Simplified protocols** - Claude 4.5 manages context automatically
 
-## What's New in v3.1
-
-### OODA Protocol
-
-Every expert follows the OODA loop (Observe-Orient-Decide-Act) for structured decision-making:
-
-```
-🔍 OBSERVE: Read current state, examine files
-🧭 ORIENT: Consider 2+ approaches, assess confidence
-🎯 DECIDE: Choose action with reasoning [Confidence: HIGH/MEDIUM/LOW]
-▶️ ACT: Execute tool, update progress.json
-```
-
-### Tool Categories
-
-Tools are now categorized for progressive loading (saves 35-50% tokens):
-
-| Category | Tools | When Loaded |
-|----------|-------|-------------|
-| **Core** | Read, Edit, Glob, Grep | Always |
-| **Extended** | Write, Bash, Task | On-demand |
-| **Deferred** | WebFetch, WebSearch | Discovery-based |
-
-### Checkpointing & Recovery
-
-Checkpoints created after each step enable recovery from failures:
-
-```json
-{
-  "checkpoints": [{
-    "id": "cp-001",
-    "type": "step_complete",
-    "restorable": true,
-    "restore_command": "git checkout abc123 -- file.ts"
-  }]
-}
-```
-
-### Error Taxonomy
-
-19 error codes across 4 categories with recovery strategies:
-- **E0xx**: Recoverable (retry with backoff)
-- **E1xx**: Soft errors (alternative approach)
-- **E2xx**: Hard errors (escalate to user)
-- **E3xx**: Validation errors (fix and retry)
-
-### Enhanced YAML Frontmatter
-
-Each expert now has structured metadata with tool examples:
-
-```yaml
----
-name: n8n-expert
-version: "3.1"
-description: |
-  n8n workflow automation expert. Deep knowledge of workflow structure,
-  node types, Code node syntax, webhooks, and automation patterns.
-
-# Tool categories for progressive loading
-tools:
-  core: [Read, Edit, Glob, Grep]
-  extended: [Write, Bash]
-  deferred: [WebFetch, WebSearch]
-
-# Tool usage examples improve accuracy 72%→90%
-tool-examples:
-  Read:
-    - description: "Read workflow JSON"
-      parameters:
-        file_path: "services/workflow/workflows/Vigil-Guard-vX.X.X.json"
-      expected: "n8n workflow with nodes, connections, settings"
-
-# Routing triggers
-triggers:
-  primary: ["n8n", "workflow", "Code node"]
-  secondary: ["webhook", "automation", "node"]
-
-# Response schema
-output-schema:
-  type: object
-  required: [status, findings, actions_taken, ooda]
-
-model: sonnet
----
-```
-
-### Model Selection
-
-| Expert | Model | Rationale |
-|--------|-------|-----------|
-| orchestrator | **opus** | Complex coordination, planning |
-| All others | **sonnet** | Fast, specialized tasks |
-
-### Parallel Expert Invocation
-
-Independent experts can run simultaneously:
-
-```
-⚡ Executing in parallel...
-
-🔧 express-expert (model: sonnet)
-   └─ ✅ Completed
-
-⚛️  react-expert (model: sonnet)
-   └─ ✅ Completed
-```
-
-### Extended Thinking / Planning
-
-Multi-expert workflows start with planning phase:
-
-```
-🧠 Planning Phase
-
-📋 Task Analysis:
-   Sequential TDD workflow needed. Test first, then pattern, then verify.
-
-🎯 Strategy: sequential because test depends on pattern
-
-⚠️  Risks Identified:
-   • Pattern might cause false positives
-
-▶️  Proceeding with execution...
-```
-
-### Clean State Requirement
-
-Workflows must end in clean state (tests pass, ready to merge):
-
-```json
-{
-  "clean_state": {
-    "all_tests_pass": true,
-    "ready_to_merge": true,
-    "pending_issues": []
-  }
-}
-```
-
-## Architecture
+## Architecture v4.1
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    TECHNOLOGY EXPERTS                           │
-│                                                                 │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐  │
-│  │ n8n        │ │ React      │ │ Express    │ │ Docker     │  │
-│  │ (sonnet)   │ │ (sonnet)   │ │ (sonnet)   │ │ (sonnet)   │  │
-│  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘ └─────┬──────┘  │
-│        │              │              │              │          │
-│        └──────────────┴──────────────┴──────────────┘          │
-│                              │                                  │
-│                              ▼                                  │
-│              ┌───────────────────────────────┐                 │
-│              │      Orchestrator (opus)      │                 │
-│              │  routes + plans + coordinates │                 │
-│              └───────────────────────────────┘                 │
-│                              │                                  │
-│                              ▼                                  │
-│              ┌───────────────────────────────┐                 │
-│              │     Project Context           │                 │
-│              │  - CLAUDE.md                  │                 │
-│              │  - progress.json v3.1         │                 │
-│              │  - protocols.md               │                 │
-│              │  - tool-schema.md             │                 │
-│              └───────────────────────────────┘                 │
+│                     TECHNOLOGY EXPERTS (7)                       │
+│                                                                  │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐   │
+│  │   NATS     │ │  Express   │ │  Testing   │ │   Docker   │   │
+│  │  Expert    │ │  Expert    │ │  Expert    │ │  Expert    │   │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘   │
+│                                                                  │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐                   │
+│  │  Security  │ │ ClickHouse │ │   Python   │                   │
+│  │  Expert    │ │  Expert    │ │  Expert    │                   │
+│  └────────────┘ └────────────┘ └────────────┘                   │
+│                              │                                   │
+│                              ▼                                   │
+│              ┌───────────────────────────────┐                  │
+│              │     Context System            │                  │
+│              │  - memory/learnings.json      │                  │
+│              │  - memory/decisions.json      │                  │
+│              │  - core/protocols.md          │                  │
+│              └───────────────────────────────┘                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Available Experts (17)
+## Available Experts (7)
 
-| Expert | Model | Triggers | Specialization |
-|--------|-------|----------|----------------|
-| `orchestrator` | opus | multi-step, coordinate | Task routing, workflow management |
-| `n8n-expert` | sonnet | n8n, workflow, webhook | Workflows, nodes, automation |
-| `react-expert` | sonnet | react, component, hook | Components, hooks, state |
-| `express-expert` | sonnet | express, api, endpoint | REST APIs, middleware, auth |
-| `vitest-expert` | sonnet | test, vitest, TDD | Testing, fixtures, mocking |
-| `clickhouse-expert` | sonnet | clickhouse, SQL, analytics | Analytics SQL, schema |
-| `docker-expert` | sonnet | docker, container, compose | Containers, networking |
-| `presidio-expert` | sonnet | presidio, PII, entity | PII detection, NLP |
-| `security-expert` | sonnet | security, OWASP, XSS | Auth, vulnerabilities |
-| `git-expert` | sonnet | git, commit, branch | Version control, PRs |
-| `python-expert` | sonnet | python, flask, fastapi | Flask, data processing |
-| `tailwind-expert` | sonnet | tailwind, CSS, styling | Utility CSS, responsive |
-| `kubernetes-expert` | sonnet | kubernetes, k8s, kubectl, pod | Cluster ops, deployments |
-| `helm-expert` | sonnet | helm, chart, values.yaml | Charts, releases, templating |
-| `nats-expert` | sonnet | nats, jetstream, stream | Messaging, queues |
-| `redis-expert` | sonnet | redis, cache, rate limit | Caching, sessions |
-| `code-audit-expert` | opus | audit, code quality, review | Code auditing, quality assessment |
-
-## How It Works
-
-### 1. Intelligent Routing
-
-The `/expert` command analyzes task description and matches against expert triggers:
-
-```
-/expert Add health check to Express API
-→ Detects: "API", "Express" → Routes to express-expert (sonnet)
-```
-
-### 2. Progress File v3.0
-
-Multi-step tasks use enhanced `.claude/state/progress.json`:
-
-```json
-{
-  "version": "3.0",
-  "workflow_id": "wf-20251127-abc123",
-  "planning": {
-    "thinking": "TDD workflow: test → implement → verify",
-    "strategy_rationale": "Test-first ensures pattern works",
-    "risks": ["False positives possible"]
-  },
-  "steps": [
-    {
-      "expert": "vitest-expert",
-      "model": "sonnet",
-      "action": "create_fixture",
-      "status": "completed",
-      "duration_ms": 1200,
-      "artifacts": ["tests/fixtures/sql.json"]
-    }
-  ],
-  "clean_state": {
-    "all_tests_pass": true,
-    "ready_to_merge": true
-  }
-}
-```
-
-### 3. Expert Invocation with Model
-
-```javascript
-Task(
-  prompt: "You are n8n-expert. Read AGENT.md for knowledge, progress.json for context.
-           Execute: add_pattern. Update progress when done.",
-  subagent_type: "general-purpose",
-  model: "sonnet"  // From frontmatter
-)
-```
-
-### 4. 3-Tier Knowledge Model
-
-**Tier 1: Core Knowledge** (instant)
-- Fundamentals, best practices, common patterns
-- 80% of tasks
-
-**Tier 2: Official Documentation** (WebFetch)
-- API references, configuration options
-- When uncertain about details
-
-**Tier 3: Community Knowledge** (WebSearch)
-- Edge cases, workarounds, known issues
-- Unusual problems
+| Expert | Keywords | Specialization |
+|--------|----------|----------------|
+| `nats-expert` | nats, jetstream, stream, consumer | Messaging, streams, KV store |
+| `security-expert` | security, OWASP, XSS, audit | API auth, vulnerabilities, audits |
+| `express-expert` | express, api, route, redis, cache | REST APIs, middleware, JWT auth |
+| `testing-expert` | test, vitest, TDD, fixture | Testing, TDD workflow, mocking |
+| `docker-expert` | docker, compose, kubernetes | Containers, orchestration |
+| `clickhouse-expert` | clickhouse, SQL, analytics | Analytics DB, schema, TTL |
+| `python-expert` | python, flask, fastapi, presidio | Python APIs, PII detection |
 
 ## Directory Structure
 
 ```
 .claude/
-├── agents/
-│   ├── orchestrator/      # Task routing (opus)
-│   │   └── AGENT.md       # With YAML frontmatter
-│   ├── n8n-expert/        # n8n automation (sonnet)
-│   │   └── AGENT.md
-│   ├── react-expert/      # React development (sonnet)
-│   │   └── AGENT.md
-│   ├── code-audit-expert/ # Code auditing (opus)
-│   │   └── AGENT.md
-│   ├── [9 more experts...]
-├── core/
-│   └── protocols.md       # Shared protocols v3.0
-├── state/
-│   └── progress.json      # Current workflow state
-├── commands/
-│   └── expert.md          # /expert command
-└── skills/                # Legacy skills
+├── agents/                    # Technology experts (7)
+│   ├── nats-expert/
+│   ├── security-expert/
+│   ├── express-expert/
+│   ├── testing-expert/
+│   ├── docker-expert/
+│   ├── clickhouse-expert/
+│   └── python-expert/
+│
+├── skills/                    # Procedural skills (6)
+│   ├── session-initializer/
+│   ├── pattern-library-manager/
+│   ├── git-commit-helper/
+│   ├── browser-extension-developer/
+│   ├── documentation-specialist/
+│   └── installation-orchestrator/
+│
+├── memory/                    # Cross-session persistence
+│   ├── learnings.json
+│   ├── preferences.json
+│   └── decisions.json
+│
+├── state/                     # Session state (gitignore)
+│   └── session-context.json
+│
+├── core/                      # Shared protocols
+│   ├── protocols.md
+│   └── tool-schema.md
+│
+├── hooks/                     # Automation hooks (Python)
+│   ├── session-init.sh
+│   ├── safety-validator.py
+│   └── memory-writer.py
+│
+└── commands/                  # Slash commands
+    ├── expert.md
+    ├── deploy.md
+    └── ...
 ```
 
-## Usage Examples
+## Memory System
 
-### Single Expert with Model
+Cross-session learning with automatic persistence:
 
+**How it works:**
+1. **SessionStart** - `session-init.sh` loads recent learnings into context
+2. **During Session** - Use `/remember` to save learnings
+3. **Stop** - `memory-writer.py` persists to permanent storage
+
+**Usage:**
 ```
-/expert How do I use $input.all() in n8n Code node?
-
-🤖 Invoking: n8n-expert (model: sonnet)
-🔍 Fetching docs... (verifying Code node syntax)
-✅ Confirmed: $input.all() returns array of items
-📚 Source: https://docs.n8n.io/code/
-```
-
-### Multi-Expert Sequential
-
-```
-/expert Add SQL injection detection with tests
-
-🧠 Planning: TDD workflow (test → implement → verify)
-
-🎯 Task: Add SQL injection detection with tests
-
-📋 Classification:
-   • Primary: vitest-expert
-   • Supporting: n8n-expert
-   • Strategy: sequential
-
-🧪 Step 1/3: vitest-expert (model: sonnet)
-   ├─ ▶️  Action: create_fixture
-   └─ ✅ Completed (1.2s)
-
-⚙️  Step 2/3: n8n-expert (model: sonnet)
-   ├─ ▶️  Action: add_pattern
-   └─ ✅ Completed (0.8s)
-
-🧪 Step 3/3: vitest-expert (model: sonnet)
-   ├─ ▶️  Action: run_tests
-   └─ ✅ Completed (2.1s)
-
-════════════════════════════════════════════════════════════
-✨ Task Completed in 4.1s
-
-✅ Clean State: Tests passing, ready to merge
-════════════════════════════════════════════════════════════
+/remember learning Always use parameterized queries for ClickHouse
+/remember decision Use NATS request-reply for Python services
 ```
 
-### Multi-Expert Parallel
+**Files:**
+- `memory/learnings.json` - Lessons learned (max 100, FIFO rotation)
+- `memory/decisions.json` - Architectural decisions (max 50, FIFO)
+- `memory/preferences.json` - User style preferences
+
+## Simplified Tool Categories
+
+Claude 4.5 manages tool loading automatically:
+
+| Category | Tools |
+|----------|-------|
+| **Always Available** | Read, Edit, Glob, Grep |
+| **On-Demand** | Write, Bash, Task, WebFetch, WebSearch |
+
+## Usage
+
+### Single Expert
 
 ```
-/expert Create API endpoint with React component
+/expert How do I configure a NATS JetStream consumer?
 
-🎯 Task: Create API endpoint with React component
-
-📋 Classification:
-   • Experts: express-expert, react-expert
-   • Strategy: parallel (independent work)
-
-⚡ Executing in parallel...
-
-🔧 express-expert (model: sonnet) → ✅
-⚛️  react-expert (model: sonnet) → ✅
-
-✨ Task Completed
+🤖 Invoking: nats-expert
+✅ Use jetstream.consumers.add() with ack_policy
+📚 Source: https://docs.nats.io/
 ```
 
-## Effective Usage Guide
-
-### Best Practices
-
-#### 1. Use Trigger Keywords for Better Routing
-
-Include technology-specific keywords in your request:
-
-```
-❌ "Fix the bug in my code"
-✅ "Fix the React component rendering bug"
-✅ "Fix the n8n workflow connection error"
-```
-
-#### 2. Direct Expert Selection with Brackets
-
-When you know which expert you need:
+### Direct Expert Selection
 
 ```
 /expert [docker] Why is port 5678 not accessible?
 /expert [security] Review this authentication flow
-/expert [clickhouse] Optimize this slow query
 ```
 
-#### 3. Combine Technologies for Multi-Expert
-
-Mention multiple technologies to trigger coordination:
+### TDD Workflow
 
 ```
-/expert Add REST endpoint with React form and tests
-→ Detects: REST, React, tests
-→ Routes to: express-expert + react-expert + vitest-expert
+/expert Add SQL injection detection with TDD
+
+🧪 Step 1: Create test fixture (malicious payload)
+⚙️  Step 2: Write failing test
+🔨 Step 3: Implement detection pattern
+✅ Step 4: Verify test passes
 ```
 
-### Common Scenarios
+## Protocols Reference
 
-#### Scenario 1: Quick Question (Single Expert)
+See `core/protocols.md` for:
 
-```
-User: /expert How do I mock fetch in Vitest?
-
-🤖 vitest-expert (sonnet):
-   Use vi.stubGlobal('fetch', vi.fn()...)
-   📚 Source: vitest.dev/guide/mocking
-```
-
-#### Scenario 2: Implementation Task (Single Expert)
-
-```
-User: /expert Add pagination to the users API endpoint
-
-🤖 express-expert (sonnet):
-   ├─ 📝 Analyzing existing routes...
-   ├─ 📝 Adding page/limit query params...
-   └─ ✅ Created: routes/users.js (modified)
-```
-
-#### Scenario 3: TDD Workflow (Sequential Multi-Expert)
-
-```
-User: /expert Add XSS detection pattern with tests
-
-🧠 Planning: TDD workflow required
-   1. vitest-expert: Create failing test
-   2. n8n-expert: Add detection pattern
-   3. vitest-expert: Verify tests pass
-
-🧪 Step 1: vitest-expert creates fixture
-⚙️  Step 2: n8n-expert adds pattern
-🧪 Step 3: vitest-expert runs tests
-
-✅ Clean State: All tests passing
-```
-
-#### Scenario 4: Independent Work (Parallel Multi-Expert)
-
-```
-User: /expert Create dashboard with backend API and styling
-
-⚡ Parallel execution:
-   • express-expert → /api/dashboard endpoint
-   • react-expert → Dashboard.tsx component
-   • tailwind-expert → Responsive grid layout
-
-✨ All 3 experts completed in parallel
-```
-
-#### Scenario 5: Documentation Lookup
-
-```
-User: /expert What's the correct syntax for ClickHouse TTL?
-
-🤖 clickhouse-expert (sonnet):
-   🔍 Fetching docs... (TTL syntax varies by version)
-   ✅ Confirmed: ALTER TABLE ... MODIFY TTL timestamp + INTERVAL 90 DAY
-   📚 Source: clickhouse.com/docs/en/sql-reference/statements/alter/ttl
-```
-
-#### Scenario 6: Security Audit
-
-```
-User: /expert Review this login endpoint for vulnerabilities
-
-🤖 security-expert (sonnet):
-   ├─ 📝 Checking OWASP Top 10...
-   ├─ ⚠️  Found: No rate limiting
-   ├─ ⚠️  Found: Password in error message
-   └─ 📋 Recommendations provided
-```
-
-### When to Use vs Skip Experts
-
-| Task | Use Expert? | Why |
-|------|-------------|-----|
-| "How to use React hooks?" | ✅ Yes | Technology question |
-| "Add feature with tests" | ✅ Yes | Multi-step workflow |
-| "Fix typo in README" | ❌ No | Simple edit |
-| "What files are in src/?" | ❌ No | Use Explore agent |
-| "Run npm test" | ❌ No | Direct Bash |
-| "Security audit" | ✅ Yes | Specialized knowledge |
-| "Optimize Docker build" | ✅ Yes | Expert optimization |
-
-### Pro Tips
-
-#### Tip 1: Chain Commands for Complex Workflows
-
-```
-# First, get expert advice
-/expert [n8n] What's the best pattern for error handling?
-
-# Then implement
-/expert Add error handling to the detection workflow
-
-# Finally, verify
-/expert [vitest] Run tests and check coverage
-```
-
-#### Tip 2: Use Context Files
-
-Experts read `CLAUDE.md` and `progress.json`. Keep them updated:
-
-```
-# CLAUDE.md - Project conventions experts will follow
-# progress.json - State for multi-step workflows
-```
-
-#### Tip 3: Request Documentation Sources
-
-When you need verified info:
-
-```
-/expert [presidio] How to add Polish PESEL recognizer? Include docs.
-
-→ Expert will cite: microsoft.github.io/presidio/...
-```
-
-#### Tip 4: Parallel for Speed
-
-For independent tasks, be explicit:
-
-```
-/expert Create user model, API endpoint, and React form (can be parallel)
-
-→ Orchestrator detects "parallel" keyword
-→ Runs 3 experts simultaneously
-```
-
-#### Tip 5: TDD Keywords
-
-For test-first development:
-
-```
-/expert Add input validation with TDD
-/expert Create feature using test-driven approach
-/expert Write tests first, then implement login
-
-→ Forces: test → implement → verify sequence
-```
-
-### Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| Wrong expert selected | Use `[expert-name]` bracket syntax |
-| Expert doesn't know project structure | Check CLAUDE.md is up to date |
-| Multi-step workflow fails midway | Check `.claude/state/progress.json` |
-| Expert gives outdated info | Ask to "verify in documentation" |
-| Too slow | Use specific expert instead of routing |
-
-## Key Differences: v2 → v3
-
-| Aspect | v2 (vg-* agents) | v3 (technology experts) |
-|--------|------------------|------------------------|
-| Knowledge | Project-specific | Technology-focused |
-| Metadata | None | YAML frontmatter |
-| Model | Single model | Per-expert (opus/sonnet) |
-| Routing | Manual | Trigger-based automatic |
-| Execution | Sequential only | Sequential + Parallel |
-| Planning | None | Extended thinking |
-| State | Basic progress | Full v3.0 schema |
-| Clean check | None | Ready-to-merge validation |
-| Documentation | Static | Dynamic (WebFetch) |
+1. **Error Handling Protocol** - 3-state error handling
+2. **Clean State Protocol** - Tests pass, ready to merge
+3. **Response Format Protocol** - Output formatting
+4. **Memory Protocol** - Cross-session learning
+5. **Code Quality Protocol** - CLAUDE.md compliance
 
 ## Adding New Expert
 
-1. Create directory: `.claude/agents/{tech}-expert/`
+1. Create directory: `agents/{tech}-expert/`
 
-2. Create `AGENT.md` with frontmatter:
+2. Create `AGENT.md` with Claude Code SDK frontmatter:
 
 ```yaml
 ---
 name: new-expert
 description: |
   Brief description of expertise.
-allowed-tools:
+  Include trigger keywords in description for routing.
+tools:
   - Read
-  - Write
   - Edit
   - Glob
   - Grep
+  - Write
+  - Bash
+  - Task
   - WebFetch
-  - WebSearch
-model: sonnet
-triggers:
-  - "keyword1"
-  - "keyword2"
 ---
+
+# Expert Name
+
+Expert in [technology].
+
+## Core Knowledge
+[Technology fundamentals]
+
+## Common Procedures
+[Step-by-step procedures]
+
+## Key Files
+[Project-specific file references]
+
+## Critical Rules
+[Do's and Don'ts]
 ```
 
-3. Add sections:
-   - **Core Knowledge (Tier 1)**: Fundamentals
-   - **Documentation Sources (Tier 2)**: Official docs URLs
-   - **Community Sources (Tier 3)**: GitHub, forums
-   - **Uncertainty Protocol**: When to fetch docs
-   - **Common Tasks**: Templates
-   - **Response Format**: Standard output
-   - **Critical Rules**: Do's and Don'ts
+---
 
-4. Expert auto-registers via frontmatter triggers
+## Migration from v3.x
 
-## Protocols Reference
+| v3.x | v4.1 |
+|------|------|
+| `/expert` with orchestrator | Direct expert invocation |
+| 17 agents | 7 consolidated agents |
+| 22+ skills | 6 essential skills |
+| TypeScript hooks | Python hooks (zero deps) |
+| Manual token tracking | Claude 4.5 automatic |
+| OODA protocol in every agent | Simplified reasoning |
 
-See `.claude/core/protocols.md` for:
-
-1. **OODA Loop Protocol** (v3.1) - Structured decision-making
-2. **Progress File Protocol** (v3.1 schema) - Workflow state with OODA
-3. **Batch Operations Protocol** (v3.1) - Token-efficient multi-file ops
-4. **Tool Categories Protocol** (v3.1) - Progressive tool loading
-5. **Extended Thinking Protocol** - Planning phase
-6. **Documentation Protocol** - 3-tier knowledge
-7. **Expert Invocation Protocol** - Task tool patterns
-8. **Checkpoint Protocol** (v3.1) - State recovery
-9. **Retry Protocol** (v3.1) - Error recovery with 19 error codes
-10. **Response Format Protocol** - Emoji visibility
-11. **Error Handling Protocol** - Structured error reporting
-12. **Handoff Protocol** - Expert-to-expert transfer
-13. **Clean State Protocol** - Tests pass, ready to merge
-14. **YAML Frontmatter Protocol** - Agent metadata
-
-See `.claude/core/tool-schema.md` for:
-
-- Tool categories (Core/Extended/Deferred)
-- Token costs and loading strategy
-- Tool selection decision tree
-- Expert tool allocation matrix
+**Removed Agents:**
+- orchestrator → Claude Code handles routing natively
+- react-expert → Frontend Conventions in CLAUDE.md
+- vitest-expert → testing-expert
+- presidio-expert → python-expert
+- kubernetes-expert → docker-expert
+- redis-expert → express-expert
+- helm-expert, git-expert → removed
 
 ---
 
-**Version:** 3.1.0
+**Version:** 4.1.0
 **Status:** Production ready
-**Philosophy:** Technology experts + OODA protocol + tool categories + checkpointing + error recovery
+**Based on:** Anthropic Context Engineering Best Practices (2025-2026)

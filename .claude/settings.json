@@ -1,0 +1,176 @@
+{
+  "enabledPlugins": {
+    "code-review@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true,
+    "frontend-design@claude-code-plugins": true,
+    "plugin-dev@claude-code-plugins": true
+  },
+  "thinkingMode": "always",
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm run test:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(mypy:*)",
+      "Bash(eslint:*)",
+      "Bash(tsc --noEmit:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git branch:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(echo:*)"
+    ],
+    "ask": [
+      "Edit(*)",
+      "Write(*)",
+      "Bash(rm:*)",
+      "Bash(rm -rf:*)",
+      "Bash(docker restart:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(systemctl restart:*)",
+      "Bash(systemctl stop:*)",
+      "Bash(kubectl delete:*)",
+      "Bash(kubectl rollout:*)",
+      "Bash(npm run deploy:*)",
+      "Bash(pnpm run deploy:*)",
+      "Bash(pnpm deploy:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(pip install:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "_description": "Session initializer: creates session context, loads memory",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-init.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "_description": "Audit trail: logs all user prompt submissions",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/audit-logger.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "_description": "Safety gate: blocks destructive bash commands and sensitive file modifications",
+        "matcher": "Bash|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/safety-validator.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "_description": "File tracking: session-based file tracking for TSC check",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use-tracker.sh"
+          }
+        ]
+      },
+      {
+        "_description": "Auto-format files after Write/Edit (Ruff for Python, Prettier for JS/TS)",
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/auto-format.sh"
+          }
+        ]
+      },
+      {
+        "_description": "Documentation reminder: suggests doc updates after relevant code changes",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/doc-update-reminder.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "_description": "Memory persistence: saves session learnings to permanent memory",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/memory-writer.py"
+          }
+        ]
+      },
+      {
+        "_description": "TypeScript build check: runs TSC on modified repos only",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/tsc-check.sh"
+          }
+        ]
+      },
+      {
+        "_description": "Self-check reminder: analyzes edited files for risky patterns",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/self-check-reminder.sh"
+          }
+        ]
+      },
+      {
+        "_description": "Notification sound: plays audio notification on completion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/notification-sound.sh"
+          }
+        ]
+      },
+      {
+        "_description": "Audit trail: logs Stop events",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/audit-logger.py"
+          }
+        ]
+      }
+    ]
+  }
+}

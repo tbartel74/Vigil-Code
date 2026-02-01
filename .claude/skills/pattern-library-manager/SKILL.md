@@ -1,307 +1,343 @@
 ---
 name: pattern-library-manager
-description: Expert management of detection patterns in Vigil Guard v2.0.0. Use for heuristics-service pattern files (18 JSON files), unified_config.json categories, ReDoS protection, scoring algorithms, and pattern optimization.
-version: 2.0.0
+description: |
+  Detection pattern management for Vigil Guard Enterprise. Use for NATS KV pattern storage,
+  detection-worker configuration, Qdrant semantic patterns, scoring algorithms,
+  and pattern optimization.
+version: 3.0.0
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
 ---
 
-# Pattern Library Manager (v2.0.0)
+# Pattern Library Manager for Vigil Guard Enterprise
 
 ## Overview
 
-Expert management of detection patterns across the Vigil Guard v2.0.0 3-branch parallel detection architecture. Patterns are now distributed across multiple components.
+Expert management of detection patterns across Vigil Guard Enterprise's worker-based detection architecture. Patterns are stored in NATS KV for heuristics and Qdrant for semantic similarity.
 
-## v2.0.0 Architecture Change
+## Enterprise Architecture
 
-### REMOVED: rules.config.json
+### Pattern Storage Locations
 
-**OLD (v1.x):** Single 829-line rules.config.json with 34 categories
-**NEW (v2.0.0):** Distributed pattern system:
+| Component | Storage | Purpose |
+|-----------|---------|---------|
+| Heuristics | NATS KV `vigil-patterns` | JSON pattern files |
+| Semantic | Qdrant `vigil_attack_patterns` | Vector embeddings |
+| Config | NATS KV `vigil-config` | unified_config.json |
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| Heuristics Service | `services/heuristics-service/patterns/` | 18 JSON pattern files |
-| Unified Config | `services/workflow/config/unified_config.json` | Category configs (303 lines) |
-| PII Config | `services/workflow/config/pii.conf` | PII patterns (361 lines) |
-| Semantic Service | ClickHouse vectors | Embedding similarity |
+### Pattern Flow
+
+```
+                     NATS KV
+                  vigil-patterns
+                        │
+           ┌────────────┴────────────┐
+           ▼                         ▼
+   detection-worker              Qdrant
+  (heuristics patterns)    vigil_attack_patterns
+           │                         │
+           └────────────┬────────────┘
+                        ▼
+                 arbiter-worker
+              (weighted scoring)
+```
 
 ## When to Use This Skill
 
-- Managing detection patterns in heuristics-service (18 JSON files)
-- Configuring category weights in unified_config.json
-- Validating regex patterns for ReDoS vulnerabilities
-- Understanding 3-branch scoring algorithms
-- Tracking false positive rates per category
+- Managing detection patterns in NATS KV
+- Configuring Qdrant collections for semantic search
+- Understanding weighted scoring algorithms
+- Tracking false positive rates
 - Analyzing pattern effectiveness metrics
-- Optimizing pattern performance
+- Optimizing detection performance
 
-## Pattern File Locations (v2.0.0)
+## Pattern Storage (NATS KV)
 
-### Heuristics Service Patterns (18 files)
-
-```
-services/heuristics-service/patterns/
-├── boundary-patterns.json          # System boundary markers
-├── divider-patterns.json           # Text divider patterns
-├── divider-patterns-manual.json    # Manual divider rules
-├── emoji-mappings.json             # Emoji obfuscation maps
-├── extraction-summary.json         # Data extraction patterns
-├── homoglyphs.json                 # Unicode lookalike characters
-├── injection-patterns.json         # Injection attack patterns
-├── leet-speak.json                 # Leet speak mappings
-├── multi-char-sequences.json       # Multi-character substitutions
-├── narrative-patterns.json         # Narrative injection patterns
-├── roleplay-patterns.json          # Roleplay attack patterns
-├── roleplay-patterns-manual.json   # Manual roleplay rules
-├── security-keywords.json          # Security-related keywords
-├── social-engineering-patterns.json # Social engineering markers
-├── system-markers.json             # System prompt markers
-├── whisper-patterns.json           # Whisper attack patterns
-├── whisper-patterns-manual.json    # Manual whisper rules
-└── zero-width.json                 # Zero-width character detection
-```
-
-### Heuristics Service Config
+### KV Bucket: `vigil-patterns`
 
 ```
-services/heuristics-service/config/default.json
+vigil-patterns/
+├── injection-patterns          # Injection attack patterns
+├── whisper-patterns            # Whisper attack patterns
+├── roleplay-patterns           # Roleplay jailbreak patterns
+├── boundary-patterns           # System boundary markers
+├── obfuscation-patterns        # Obfuscation detection
+├── homoglyphs                  # Unicode lookalikes
+├── leet-speak                  # Leet speak mappings
+└── zero-width                  # Zero-width characters
 ```
 
-**Detector weights:**
+### Managing Patterns via NATS CLI
+
+```bash
+# List all patterns
+docker exec vigil-nats nats kv ls vigil-patterns
+
+# Get specific pattern
+docker exec vigil-nats nats kv get vigil-patterns injection-patterns
+
+# Update pattern
+docker exec vigil-nats nats kv put vigil-patterns injection-patterns \
+  "$(cat patterns/injection-patterns.json)"
+
+# Watch for changes
+docker exec vigil-nats nats kv watch vigil-patterns
+```
+
+### Pattern JSON Structure
+
 ```json
 {
-  "detection": {
-    "weights": {
-      "obfuscation": 0.25,
-      "structure": 0.20,
-      "whisper": 0.25,
-      "entropy": 0.15,
-      "security": 0.15
+  "name": "injection-patterns",
+  "version": "1.0.0",
+  "patterns": [
+    {
+      "id": "inj-001",
+      "pattern": "ignore (all )?(previous|prior|above) instructions?",
+      "flags": "i",
+      "score": 85,
+      "category": "INJECTION",
+      "description": "Classic instruction override"
     },
-    "thresholds": {
-      "low_max": 30,
-      "medium_max": 65
+    {
+      "id": "inj-002",
+      "pattern": "disregard (everything|all|any)",
+      "flags": "i",
+      "score": 80,
+      "category": "INJECTION"
     }
-  }
+  ]
 }
 ```
 
-### Unified Config (v5.0.0, 303 lines)
+## Configuration (NATS KV)
+
+### KV Bucket: `vigil-config`
 
 ```
-services/workflow/config/unified_config.json
+vigil-config/
+├── unified_config              # Main detection config
+├── thresholds                  # Score thresholds
+└── weights                     # Branch weights
 ```
 
-**Category configuration (merged from old rules.config.json):**
+### unified_config Structure
+
 ```json
 {
+  "version": "6.0.0",
   "detection": {
+    "thresholds": {
+      "ALLOW_MAX": 29,
+      "SANITIZE_LIGHT_MAX": 64,
+      "SANITIZE_HEAVY_MAX": 84
+    },
+    "weights": {
+      "heuristics": 0.35,
+      "semantic": 0.35,
+      "pii": 0.30
+    },
     "categories": {
-      "SQL_XSS_ATTACKS": { "enabled": true, "weight": 50 },
-      "JAILBREAK_ATTEMPT": { "enabled": true, "weight": 80 },
-      "PROMPT_LEAK": { "enabled": true, "weight": 70 }
+      "INJECTION": { "enabled": true, "weight": 1.0 },
+      "JAILBREAK": { "enabled": true, "weight": 1.0 },
+      "PROMPT_LEAK": { "enabled": true, "weight": 0.9 },
+      "DATA_EXFIL": { "enabled": true, "weight": 0.95 }
     }
   }
 }
 ```
 
-## Configuration Editing Guidelines
+## Semantic Patterns (Qdrant)
 
-### Web UI Editable (via http://localhost/ui/config/)
-
-- Decision thresholds (ALLOW_MAX, SANITIZE thresholds)
-- Category enable/disable toggles
-- Performance settings
-- PII detection settings
-
-### Direct Code Edit (TDD workflow required)
-
-1. **Heuristics pattern files** - `services/heuristics-service/patterns/*.json`
-2. **Detector configurations** - `services/heuristics-service/config/default.json`
-3. **PII regex fallbacks** - `services/workflow/config/pii.conf`
-4. **Leet speak mappings** - `services/heuristics-service/patterns/leet-speak.json`
-5. **Homoglyph mappings** - `services/heuristics-service/patterns/homoglyphs.json`
-
-**Reason:** Complex structures requiring TDD workflow and security validation.
-
-## Pattern Addition Workflow (v2.0.0)
-
-### Adding Heuristics Pattern
+### Collection: `vigil_attack_patterns`
 
 ```bash
-cd services/workflow
+# Check collection status
+curl http://localhost:6333/collections/vigil_attack_patterns
 
-# 1. Create test first
-cat > tests/fixtures/my-attack.json << 'EOF'
-{
-  "prompt": "malicious payload here",
-  "expected": "BLOCKED"
+# Search similar patterns
+curl -X POST http://localhost:6333/collections/vigil_attack_patterns/points/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vector": [0.1, 0.2, ...],
+    "limit": 5,
+    "with_payload": true
+  }'
+```
+
+### Adding Semantic Patterns
+
+```typescript
+// services/detection-worker/src/semantic.ts
+import { QdrantClient } from '@qdrant/js-client-rest';
+
+const qdrant = new QdrantClient({ url: 'http://vigil-qdrant:6333' });
+
+async function indexPattern(text: string, metadata: PatternMetadata) {
+  const embedding = await generateEmbedding(text);
+
+  await qdrant.upsert('vigil_attack_patterns', {
+    points: [{
+      id: crypto.randomUUID(),
+      vector: embedding,
+      payload: {
+        text,
+        category: metadata.category,
+        score: metadata.score,
+        created_at: new Date().toISOString()
+      }
+    }]
+  });
 }
-EOF
-
-# 2. Run test (should FAIL)
-npm test -- vigil-detection.test.js
-
-# 3. Edit appropriate pattern file
-# For injection attacks:
-vim services/heuristics-service/patterns/injection-patterns.json
-
-# For whisper attacks:
-vim services/heuristics-service/patterns/whisper-patterns.json
-
-# 4. Restart heuristics service
-docker-compose restart heuristics-service
-
-# 5. Re-run test (should PASS)
-npm test
-
-# 6. Commit together
-git add tests/ services/heuristics-service/
-git commit -m "feat(detect): add <category> pattern with TDD tests"
 ```
 
-### Adding Semantic Pattern
+## Scoring Architecture
 
-Semantic patterns are vector embeddings stored in ClickHouse:
+### Branch Weights (Enterprise)
 
-```bash
-# 1. Add attack example to embedding corpus
-echo '{"text": "attack example", "category": "INJECTION", "is_attack": true}' >> \
-  services/semantic-service/corpus/attacks.jsonl
-
-# 2. Re-index embeddings
-docker-compose exec semantic-service python reindex.py
-
-# 3. Verify with test
-npm test -- vigil-detection.test.js
-```
-
-## 3-Branch Scoring Architecture
-
-### Branch Weights
-
-| Branch | Weight | Service | Port |
-|--------|--------|---------|------|
-| A (Heuristics) | 30% | heuristics-service | 5005 |
-| B (Semantic) | 35% | semantic-service | 5006 |
-| C (LLM Guard) | 35% | prompt-guard-api | 8000 |
+| Branch | Weight | Worker |
+|--------|--------|--------|
+| Heuristics | 35% | detection-worker |
+| Semantic | 35% | detection-worker (Qdrant) |
+| PII | 30% | pii-worker |
 
 ### Final Score Calculation
 
-```javascript
-// Arbiter v2 weighted fusion
-const weights = { A: 0.30, B: 0.35, C: 0.35 };
-const finalScore =
-  (branchA.score * weights.A) +
-  (branchB.score * weights.B) +
-  (branchC.score * weights.C);
+```typescript
+// arbiter-worker scoring
+interface BranchResults {
+  heuristics: { score: number; categories: string[] };
+  semantic: { score: number; similarity: number };
+  pii: { score: number; entities: string[] };
+}
 
-// Critical signal override
-if (branchA.critical_signals?.obfuscation_heavy ||
-    branchC.critical_signals?.llm_attack) {
-  // Force BLOCK regardless of score
+function calculateFinalScore(branches: BranchResults): number {
+  const weights = { heuristics: 0.35, semantic: 0.35, pii: 0.30 };
+
+  const weightedScore =
+    (branches.heuristics.score * weights.heuristics) +
+    (branches.semantic.score * weights.semantic) +
+    (branches.pii.score * weights.pii);
+
+  return Math.round(weightedScore);
+}
+
+function determineDecision(score: number): Decision {
+  if (score <= 29) return 'ALLOW';
+  if (score <= 64) return 'SANITIZE_LIGHT';
+  if (score <= 84) return 'SANITIZE_HEAVY';
+  return 'BLOCK';
 }
 ```
 
-### Decision Matrix
+### Critical Signal Override
 
-| Score Range | Action | Severity |
-|------------|--------|----------|
-| 0-29 | ALLOW | Clean |
-| 30-64 | SANITIZE_LIGHT | Low |
-| 65-84 | SANITIZE_HEAVY | Medium |
-| 85-100 | BLOCK | Critical |
+```typescript
+function checkCriticalSignals(branches: BranchResults): boolean {
+  // Force BLOCK for critical patterns regardless of score
+  const criticalCategories = ['INJECTION', 'JAILBREAK', 'DATA_EXFIL'];
 
-## Heuristics Detectors (Branch A)
+  return branches.heuristics.categories.some(
+    cat => criticalCategories.includes(cat) &&
+           branches.heuristics.score >= 80
+  );
+}
+```
 
-### 1. Obfuscation Detector (25% weight)
+## Pattern Addition Workflow (TDD)
 
-**Detects:**
-- Zero-width characters (patterns/zero-width.json)
-- Homoglyphs (patterns/homoglyphs.json)
-- Base64/Hex encoding
-- Mixed script attacks
-- Leet speak (patterns/leet-speak.json)
+### Step 1: Create Test Fixture
 
-### 2. Structure Detector (20% weight)
+```typescript
+// services/detection-worker/tests/fixtures/new-attack.json
+{
+  "id": "test-new-attack",
+  "input": "malicious payload to detect",
+  "expected": {
+    "decision": "BLOCK",
+    "minScore": 85,
+    "categories": ["INJECTION"]
+  }
+}
+```
 
-**Detects:**
-- Code fence abuse
-- Boundary patterns (patterns/boundary-patterns.json)
-- Newline manipulation
-- Segment variance anomalies
+### Step 2: Run Test (Should Fail)
 
-### 3. Whisper Detector (25% weight)
+```bash
+cd services/detection-worker
+pnpm test -- --grep "new-attack"
+# Expected: FAIL - pattern not yet added
+```
 
-**Detects:**
-- Whisper patterns (patterns/whisper-patterns.json)
-- Divider patterns (patterns/divider-patterns.json)
-- Roleplay attacks (patterns/roleplay-patterns.json)
-- Question repetition
+### Step 3: Add Pattern to NATS KV
 
-### 4. Entropy Detector (15% weight)
+```bash
+# Get current patterns
+docker exec vigil-nats nats kv get vigil-patterns injection-patterns > patterns.json
 
-**Detects:**
-- High Shannon entropy
-- Bigram anomalies
-- Character class diversity
-- Language detection anomalies
+# Edit patterns.json, add new pattern
+vim patterns.json
 
-### 5. Security Detector (15% weight)
+# Update KV
+docker exec vigil-nats nats kv put vigil-patterns injection-patterns \
+  "$(cat patterns.json)"
+```
 
-**Detects:**
-- SQL injection patterns (patterns/injection-patterns.json)
-- XSS patterns
-- Command injection
-- Privilege escalation
+### Step 4: Restart Worker
+
+```bash
+docker restart detection-worker
+```
+
+### Step 5: Run Test (Should Pass)
+
+```bash
+pnpm test -- --grep "new-attack"
+# Expected: PASS
+```
+
+### Step 6: Commit
+
+```bash
+git add tests/fixtures/new-attack.json
+git commit -m "feat(detect): add new injection pattern with TDD tests"
+```
 
 ## ReDoS Validation
 
 ### Dangerous Patterns (AVOID)
 
 ```regex
-❌ ^(a+)+$              # Catastrophic backtracking
-❌ (x+x+)+y            # Nested quantifiers
-❌ (a|a)*b             # Overlapping alternation
-❌ (.*){10,}           # Excessive repetition
+# Catastrophic backtracking
+^(a+)+$
+(x+x+)+y
+(a|a)*b
+(.*){10,}
 ```
 
-### Safe Alternatives
+### Safe Patterns
 
 ```regex
-✅ ^a+$                # Simple quantifier
-✅ ^[a-z]{1,100}$      # Bounded repetition
-✅ ^(?:ab)+$           # Non-capturing group
-✅ ^a*b                # Greedy but safe
+# Bounded, non-nested
+^a+$
+^[a-z]{1,100}$
+^(?:ab)+$
+^a*b
 ```
 
 ### Validation Script
 
 ```bash
 #!/bin/bash
-# Test pattern for ReDoS vulnerability
-
 PATTERN="$1"
-
-for size in 10 100 1000 10000; do
+for size in 10 100 1000; do
   INPUT=$(printf 'a%.0s' $(seq 1 $size))
-
-  START=$(date +%s%N)
-  echo "$INPUT" | timeout 1s grep -P "$PATTERN" > /dev/null
-  EXIT_CODE=$?
-  END=$(date +%s%N)
-
-  DURATION=$(((END - START) / 1000000))
-
-  if [ $EXIT_CODE -eq 124 ]; then
-    echo "❌ REDOS DETECTED: Timeout at size $size"
+  timeout 1s node -e "/$PATTERN/.test('$INPUT')" 2>/dev/null
+  if [ $? -eq 124 ]; then
+    echo "REDOS DETECTED at size $size"
     exit 1
   fi
-
-  echo "✅ Size $size: ${DURATION}ms"
 done
-
-echo "✅ Pattern is safe"
+echo "Pattern is safe"
 ```
 
 ## Pattern Effectiveness Analysis
@@ -309,39 +345,37 @@ echo "✅ Pattern is safe"
 ### ClickHouse Queries
 
 ```sql
--- Branch performance comparison
+-- Detection rate by category
 SELECT
-  arbiter_decision,
-  avg(branch_a_score) as avg_heuristics,
-  avg(branch_b_score) as avg_semantic,
-  avg(branch_c_score) as avg_llm_guard,
-  count() as total
-FROM n8n_logs.events_processed
+  arrayJoin(categories) as category,
+  count() as detections,
+  round(avg(score), 2) as avg_score
+FROM vigil.detection_events
 WHERE timestamp > now() - INTERVAL 7 DAY
-GROUP BY arbiter_decision;
+  AND length(categories) > 0
+GROUP BY category
+ORDER BY detections DESC;
 
--- Detection rate by branch
+-- Branch contribution analysis
 SELECT
-  CASE
-    WHEN branch_a_score > branch_b_score AND branch_a_score > branch_c_score THEN 'Heuristics'
-    WHEN branch_b_score > branch_c_score THEN 'Semantic'
-    ELSE 'LLM Guard'
-  END as primary_detector,
-  count() as detections
-FROM n8n_logs.events_processed
-WHERE arbiter_decision != 'ALLOW'
-  AND timestamp > now() - INTERVAL 7 DAY
-GROUP BY primary_detector;
+  decision,
+  round(avg(branch_a_score), 2) as avg_heuristics,
+  round(avg(branch_b_score), 2) as avg_semantic,
+  count() as total
+FROM vigil.detection_events
+WHERE timestamp > now() - INTERVAL 7 DAY
+GROUP BY decision;
 
--- False positive analysis
+-- False positive candidates
 SELECT
-  original_input,
+  request_id,
+  score,
+  categories,
   branch_a_score,
-  branch_b_score,
-  branch_c_score,
-  arbiter_decision
-FROM n8n_logs.events_processed
-WHERE arbiter_decision = 'BLOCK'
+  branch_b_score
+FROM vigil.detection_events
+WHERE decision = 'BLOCK'
+  AND score < 90
   AND timestamp > now() - INTERVAL 1 DAY
 ORDER BY timestamp DESC
 LIMIT 20;
@@ -352,82 +386,76 @@ LIMIT 20;
 ### Pattern Not Triggering
 
 ```bash
-# 1. Test heuristics service directly
-curl -X POST http://localhost:5005/analyze \
+# Check pattern is in KV
+docker exec vigil-nats nats kv get vigil-patterns injection-patterns | jq .
+
+# Test detection-worker directly
+curl -X POST http://localhost:8787/v1/analyze \
+  -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"text": "test payload", "request_id": "debug-123"}'
+  -d '{"text":"test payload","mode":"fast"}'
 
-# 2. Check service logs
-docker logs vigil-heuristics-service 2>&1 | tail -50
-
-# 3. Verify pattern file is loaded
-docker exec vigil-heuristics-service cat /app/patterns/injection-patterns.json | jq .
-
-# 4. Test pattern with grep
-echo "test payload" | grep -P "your_pattern"
+# Check worker logs
+docker logs detection-worker --tail 50 | grep -i pattern
 ```
 
-### Branch Degraded
-
-```bash
-# Check branch health
-curl http://localhost:5005/health  # Heuristics
-curl http://localhost:5006/health  # Semantic
-curl http://localhost:8000/health  # LLM Guard
-
-# Check timing in ClickHouse
-docker exec vigil-clickhouse clickhouse-client -q "
-  SELECT
-    avg(branch_a_timing_ms) as avg_a,
-    avg(branch_b_timing_ms) as avg_b,
-    avg(branch_c_timing_ms) as avg_c
-  FROM n8n_logs.events_processed
-  WHERE timestamp > now() - INTERVAL 1 HOUR
-"
-```
-
-### False Positives
+### High False Positive Rate
 
 **Solutions:**
-1. Reduce detector weight in `heuristics-service/config/default.json`
-2. Add context requirements to pattern
-3. Add to allowlist in unified_config.json
-4. Adjust threshold in arbiter configuration
+1. Reduce pattern score in NATS KV
+2. Add context requirements
+3. Adjust category weight in unified_config
+4. Add to allowlist
+
+```bash
+# Update pattern score
+docker exec vigil-nats nats kv get vigil-patterns injection-patterns > tmp.json
+# Edit tmp.json, reduce score
+docker exec vigil-nats nats kv put vigil-patterns injection-patterns "$(cat tmp.json)"
+```
+
+### Qdrant Search Not Working
+
+```bash
+# Check Qdrant health
+curl http://localhost:6333/health
+
+# Check collection exists
+curl http://localhost:6333/collections/vigil_attack_patterns
+
+# Check vector count
+curl http://localhost:6333/collections/vigil_attack_patterns | jq '.result.points_count'
+```
 
 ## Metrics & KPIs
 
 ```yaml
 quality_metrics:
   redos_vulnerabilities: 0 (zero tolerance)
-  false_positive_rate: <5% per branch
-  detection_effectiveness: >80%
-  branch_latency: <1000ms (A), <2000ms (B), <3000ms (C)
+  false_positive_rate: <3%
+  detection_effectiveness: >85%
+  pattern_latency: <50ms (heuristics), <100ms (semantic)
 
 coverage_metrics:
-  pattern_files: 18 JSON files
-  heuristics_detectors: 5 (obfuscation, structure, whisper, entropy, security)
-  semantic_embeddings: ClickHouse vectors
-  llm_guard_model: Meta Llama Prompt Guard 2
+  heuristics_patterns: ~100 patterns
+  semantic_vectors: ~1000 attack samples
+  categories_covered: 15+
 ```
 
 ## Related Skills
 
-- `n8n-vigil-workflow` - For workflow architecture and arbiter logic
-- `vigil-testing-e2e` - For writing comprehensive tests
-- `clickhouse-grafana-monitoring` - For analyzing branch metrics
-- `docker-vigil-orchestration` - For service management
+- `nats-vigil-messaging` - NATS KV operations
+- `vigil-testing-e2e` - Pattern testing
+- `docker-vigil-orchestration` - Service management
 
 ## References
 
-- Heuristics patterns: `services/heuristics-service/patterns/` (18 files)
-- Heuristics config: `services/heuristics-service/config/default.json`
-- Unified config: `services/workflow/config/unified_config.json` (303 lines, v5.0.0)
-- PII config: `services/workflow/config/pii.conf` (361 lines)
-- Workflow: `services/workflow/workflows/Vigil Guard v2.0.0.json`
+- Detection worker: `services/detection-worker/`
+- Qdrant docs: https://qdrant.tech/documentation/
+- NATS KV docs: https://docs.nats.io/nats-concepts/jetstream/key-value-store
 
 ## Version History
 
-- **v2.0.0** (Current): Distributed patterns, 3-branch architecture, Aho-Corasick prefilter
-- **v1.6.11**: Single rules.config.json (829 lines, 34 categories) - DEPRECATED
-- **v1.5.0**: Added MEDICAL_MISUSE category
-- **v1.4.0**: Enhanced SQL_XSS_ATTACKS
+- **v3.0.0** (Current): Enterprise architecture - NATS KV, Qdrant, TypeScript workers
+- **v2.0.0** (PoC): File-based patterns, heuristics-service, semantic-service
+- **v1.x** (Legacy): Single rules.config.json

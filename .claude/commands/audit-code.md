@@ -230,7 +230,7 @@ For each category (or selected categories):
 
 This command automatically includes Vigil Guard-specific checks:
 
-- **n8n Workflow Quality:** 40-node pipeline integrity
+- **NATS Worker Pipeline:** Worker configuration and message flow
 - **Presidio Integration:** Dual-language PII detection
 - **ClickHouse Schema:** TTL and partitioning
 - **Detection Patterns:** ReDoS vulnerability check

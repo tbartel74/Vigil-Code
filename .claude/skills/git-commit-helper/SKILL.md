@@ -1,15 +1,15 @@
 ---
 name: git-commit-helper
-description: Automated git workflow management for Vigil Guard v2.0.0. Use for Conventional Commits formatting, CHANGELOG generation, commit validation, pre-commit hooks, release versioning, and semantic commits. CRITICAL - NO AI ATTRIBUTION IN COMMITS.
-version: 2.0.0
+description: Automated git workflow management for Vigil Guard Enterprise. Use for Conventional Commits formatting, CHANGELOG generation, commit validation, pre-commit hooks, release versioning, and semantic commits. CRITICAL - NO AI ATTRIBUTION IN COMMITS.
+version: 1.0.0
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
 ---
 
-# Git Commit Helper (v2.0.0)
+# Git Commit Helper (Enterprise)
 
 ## Overview
 
-Automated git workflow management for Vigil Guard v2.0.0 including Conventional Commits format, CHANGELOG generation, commit validation, and pre-commit hooks.
+Automated git workflow management for Vigil Guard Enterprise including Conventional Commits format, CHANGELOG generation, commit validation, and pre-commit hooks.
 
 ## When to Use This Skill
 
@@ -87,40 +87,63 @@ build:    Build system changes
 ci:       CI/CD configuration
 chore:    Maintenance tasks
 revert:   Revert previous commit
+security: Security-related changes
 ```
 
-### Scopes (Vigil Guard v2.0.0)
+### Scopes (Vigil Guard Enterprise)
 ```yaml
-workflow:     n8n workflow changes (24 nodes)
-detection:    Pattern/rules changes (unified_config.json)
-pii:          PII detection
-frontend:     React UI
-backend:      Express API
-docker:       Container/orchestration (11 services)
-tests:        Test suite (8 E2E files)
-docs:         Documentation
-config:       Configuration files
-heuristics:   Branch A service (v2.0.0)
-semantic:     Branch B service (v2.0.0)
-arbiter:      Arbiter v2 decision engine (v2.0.0)
+# API & Web
+api:        Public REST API (apps/api)
+web-ui:     Config interface (apps/web-ui)
+extension:  Browser extension (apps/extension)
+
+# NATS Workers
+detection:  Detection worker (services/detection-worker)
+semantic:   Semantic worker (services/semantic-worker)
+pii:        PII worker (services/pii-worker)
+arbiter:    Arbiter worker (services/arbiter-worker)
+logging:    Logging worker (services/logging-worker)
+
+# Support Services
+presidio:   Presidio API (services/presidio-api)
+language:   Language detector (services/language-detector)
+
+# Shared Packages
+sdk:        Python SDK (packages/sdk)
+nats:       NATS client (packages/nats-client)
+shared:     Shared types (packages/shared)
+
+# Infrastructure
+docker:     Container orchestration (infra/docker)
+k8s:        Kubernetes (infra/k8s)
+helm:       Helm charts (infra/helm)
+grafana:    Monitoring dashboards (infra/grafana)
+clickhouse: Database migrations (infra/clickhouse)
+
+# Other
+auth:       Authentication/authorization
+config:     Configuration files
+tests:      Test suite
+docs:       Documentation
+ci:         CI/CD pipelines
 ```
 
-### Examples (v2.0.0)
+### Examples (Enterprise)
 
-**Feature (3-branch detection):**
+**Feature (NATS Worker):**
 ```bash
-git commit -m "feat(arbiter): implement weighted fusion v2
+git commit -m "feat(arbiter): implement weighted fusion
 
-- Add 3-branch parallel execution (A:30%, B:35%, C:35%)
-- Implement Arbiter v2 decision engine
-- Add branch degradation handling
+- Add worker weight configuration (35/35/30)
+- Implement threshold-based decision logic
+- Add degradation handling for failed workers
 
-BREAKING: Requires ClickHouse schema migration (branch columns)"
+BREAKING: Requires NATS KV config migration"
 ```
 
 **Bug Fix:**
 ```bash
-git commit -m "fix(heuristics): correct pattern timeout handling
+git commit -m "fix(detection): correct pattern timeout handling
 
 - Fix 1000ms timeout not being enforced
 - Add graceful degradation on timeout
@@ -129,11 +152,19 @@ git commit -m "fix(heuristics): correct pattern timeout handling
 
 **Documentation:**
 ```bash
-git commit -m "docs: update architecture for v2.0.0
+git commit -m "docs: update architecture for Enterprise
 
-- Replace 40-node with 24-node 3-branch architecture
-- Add heuristics-service and semantic-service docs
-- Update port reference table (5005, 5006)"
+- Document NATS JetStream worker pipeline
+- Add worker specifications table
+- Update port reference table"
+```
+
+**Security:**
+```bash
+git commit -m "security(auth): fix timing attack in key validation
+
+- Use constant-time comparison for API keys
+- Add rate limiting on auth endpoints"
 ```
 
 ## Common Tasks
@@ -147,23 +178,35 @@ git commit -m "docs: update architecture for v2.0.0
 # Analyze changed files
 CHANGED_FILES=$(git diff --cached --name-only)
 
-# Infer scope (v2.0.0 updated)
+# Infer scope (Enterprise paths)
 SCOPE=""
-if echo "$CHANGED_FILES" | grep -q "services/workflow/"; then
-  SCOPE="workflow"
-elif echo "$CHANGED_FILES" | grep -q "services/heuristics-service/"; then
-  SCOPE="heuristics"
-elif echo "$CHANGED_FILES" | grep -q "services/semantic-service/"; then
+if echo "$CHANGED_FILES" | grep -q "apps/api/"; then
+  SCOPE="api"
+elif echo "$CHANGED_FILES" | grep -q "apps/web-ui/frontend/"; then
+  SCOPE="web-ui"
+elif echo "$CHANGED_FILES" | grep -q "apps/web-ui/backend/"; then
+  SCOPE="web-ui"
+elif echo "$CHANGED_FILES" | grep -q "services/detection-worker/"; then
+  SCOPE="detection"
+elif echo "$CHANGED_FILES" | grep -q "services/semantic-worker/"; then
   SCOPE="semantic"
-elif echo "$CHANGED_FILES" | grep -q "services/web-ui/frontend/"; then
-  SCOPE="frontend"
-elif echo "$CHANGED_FILES" | grep -q "services/web-ui/backend/"; then
-  SCOPE="backend"
+elif echo "$CHANGED_FILES" | grep -q "services/pii-worker/"; then
+  SCOPE="pii"
+elif echo "$CHANGED_FILES" | grep -q "services/arbiter-worker/"; then
+  SCOPE="arbiter"
+elif echo "$CHANGED_FILES" | grep -q "services/logging-worker/"; then
+  SCOPE="logging"
+elif echo "$CHANGED_FILES" | grep -q "packages/nats-client/"; then
+  SCOPE="nats"
+elif echo "$CHANGED_FILES" | grep -q "packages/sdk/"; then
+  SCOPE="sdk"
+elif echo "$CHANGED_FILES" | grep -q "infra/docker/"; then
+  SCOPE="docker"
+elif echo "$CHANGED_FILES" | grep -q "infra/k8s/"; then
+  SCOPE="k8s"
 elif echo "$CHANGED_FILES" | grep -q "docs/"; then
   SCOPE="docs"
-elif echo "$CHANGED_FILES" | grep -q "docker-compose.yml"; then
-  SCOPE="docker"
-elif echo "$CHANGED_FILES" | grep -q "tests/"; then
+elif echo "$CHANGED_FILES" | grep -qE "\.test\.(ts|js)$"; then
   SCOPE="tests"
 fi
 
@@ -179,6 +222,7 @@ echo "2) fix"
 echo "3) docs"
 echo "4) refactor"
 echo "5) test"
+echo "6) security"
 read -p "Choice: " TYPE_CHOICE
 
 case $TYPE_CHOICE in
@@ -187,13 +231,18 @@ case $TYPE_CHOICE in
   3) TYPE="docs" ;;
   4) TYPE="refactor" ;;
   5) TYPE="test" ;;
+  6) TYPE="security" ;;
   *) TYPE="chore" ;;
 esac
 
 read -p "Commit subject: " SUBJECT
 
 # Build commit message (NO AI ATTRIBUTION!)
-COMMIT_MSG="$TYPE($SCOPE): $SUBJECT"
+if [ -n "$SCOPE" ]; then
+  COMMIT_MSG="$TYPE($SCOPE): $SUBJECT"
+else
+  COMMIT_MSG="$TYPE: $SUBJECT"
+fi
 
 # Show preview
 echo ""
@@ -231,18 +280,19 @@ fi
 # 2. Run linter on staged files
 if git diff --cached --name-only | grep -q ".ts$"; then
   echo "Running TypeScript type check..."
-  npx tsc --noEmit || exit 1
+  pnpm typecheck || exit 1
 fi
 
-# 3. Run tests (v2.0.0: 8 E2E files)
-if git diff --cached --name-only | grep -qE "(test|spec)"; then
-  echo "Running test suite..."
-  cd services/workflow && npm test || exit 1
+# 3. Run tests for changed workers
+CHANGED=$(git diff --cached --name-only)
+if echo "$CHANGED" | grep -qE "services/.*-worker/"; then
+  echo "Running worker tests..."
+  pnpm test || exit 1
 fi
 
 # 4. Check for secrets
 echo "Checking for secrets..."
-if git diff --cached | grep -iE "(password|secret|api_key|token).*(=|:)"; then
+if git diff --cached | grep -iE "(password|secret|api_key|token).*(=|:).*['\"][^'\"]{8,}['\"]"; then
   echo "⚠️  WARNING: Potential secret detected in staged changes"
   read -p "Continue anyway? (y/n): " CONFIRM
   [ "$CONFIRM" != "y" ] && exit 1
@@ -272,8 +322,8 @@ if echo "$COMMIT_MSG" | grep -iE "(Generated with.*Claude|Co-Authored-By:.*Claud
   exit 1
 fi
 
-# Conventional Commits regex (v2.0.0 scopes)
-REGEX="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,50}"
+# Conventional Commits regex (Enterprise scopes)
+REGEX="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|security)(\(.+\))?: .{1,50}"
 
 if ! echo "$COMMIT_MSG" | grep -qE "$REGEX"; then
   echo ""
@@ -281,14 +331,20 @@ if ! echo "$COMMIT_MSG" | grep -qE "$REGEX"; then
   echo ""
   echo "Format: <type>(<scope>): <subject>"
   echo ""
-  echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
-  echo "Scopes (v2.0.0): workflow, detection, pii, frontend, backend, docker, tests,"
-  echo "                 docs, config, heuristics, semantic, arbiter"
+  echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert, security"
+  echo ""
+  echo "Scopes (Enterprise):"
+  echo "  API:      api, web-ui, extension"
+  echo "  Workers:  detection, semantic, pii, arbiter, logging"
+  echo "  Services: presidio, language"
+  echo "  Packages: sdk, nats, shared"
+  echo "  Infra:    docker, k8s, helm, grafana, clickhouse"
+  echo "  Other:    auth, config, tests, docs, ci"
   echo ""
   echo "Examples:"
-  echo "  feat(arbiter): add weighted fusion v2"
-  echo "  fix(heuristics): correct pattern timeout"
-  echo "  docs: update architecture for 3-branch"
+  echo "  feat(arbiter): add weighted fusion"
+  echo "  fix(detection): correct pattern timeout"
+  echo "  security(auth): fix timing attack"
   echo ""
   exit 1
 fi
@@ -302,7 +358,7 @@ fi
 echo "✅ Commit message format valid (no AI attribution)"
 ```
 
-### Task 4: CHANGELOG Generation (v2.0.0)
+### Task 4: CHANGELOG Generation
 
 ```bash
 #!/bin/bash
@@ -317,13 +373,14 @@ echo "## [$VERSION] - $(date +%Y-%m-%d)"
 echo ""
 
 # Group commits by type
-for TYPE in feat fix docs refactor perf test build ci chore; do
+for TYPE in feat fix security docs refactor perf test build ci chore; do
   COMMITS=$(git log --pretty=format:"%s" ${PREV_TAG}..HEAD | grep "^$TYPE")
 
   if [ -n "$COMMITS" ]; then
     case $TYPE in
       feat) SECTION="### Features" ;;
       fix) SECTION="### Bug Fixes" ;;
+      security) SECTION="### Security" ;;
       docs) SECTION="### Documentation" ;;
       refactor) SECTION="### Refactoring" ;;
       perf) SECTION="### Performance" ;;
@@ -351,14 +408,6 @@ if [ -n "$BREAKING" ]; then
   echo "$BREAKING"
   echo ""
 fi
-
-# v2.0.0 specific section
-echo "### Architecture Changes (v2.0.0)"
-echo ""
-echo "- 40-node sequential → 24-node 3-branch parallel detection"
-echo "- New services: heuristics-service (5005), semantic-service (5006)"
-echo "- Arbiter v2 weighted fusion (A:30%, B:35%, C:35%)"
-echo ""
 ```
 
 ### Task 5: Semantic Versioning Helper
@@ -405,17 +454,17 @@ fi
 when: Version tag created
 action:
   1. Generate CHANGELOG.md
-  2. Update version in docs/ (v2.0.0)
+  2. Update version in docs/
   3. Commit docs changes (NO AI attribution!)
 ```
 
-### With workflow-json-architect:
+### With security-audit-scanner:
 ```yaml
-when: Workflow modified (24 nodes)
+when: Security fix committed
 action:
-  1. Commit with scope "workflow"
-  2. Include "Import to n8n NOW!" in body
-  3. Reference workflow version (v2.0.0) in footer
+  1. Use "security" type
+  2. Include CVE if applicable
+  3. Update SECURITY.md if needed
 ```
 
 ## Quick Reference
@@ -429,7 +478,7 @@ cp scripts/commit-msg.sh .git/hooks/commit-msg
 chmod +x .git/hooks/commit-msg
 
 # Generate CHANGELOG
-./scripts/generate-changelog.sh v2.0.0 > CHANGELOG.md
+./scripts/generate-changelog.sh v1.0.0 > CHANGELOG.md
 
 # Smart commit (no AI attribution)
 ./scripts/smart-commit.sh
@@ -441,37 +490,46 @@ chmod +x .git/hooks/commit-msg
 git commit --amend  # Remove AI lines from message
 ```
 
-## v2.0.0 Specific Commits
+## Enterprise Commit Examples
 
 ```bash
-# 3-branch feature
-git commit -m "feat(workflow): implement 3-branch parallel detection
+# API feature
+git commit -m "feat(api): add batch processing endpoint
 
-- Add heuristics-service (Branch A, port 5005)
-- Add semantic-service (Branch B, port 5006)
-- Update prompt-guard-api (Branch C, port 8000)
-- Implement Arbiter v2 weighted fusion
+- Support up to 100 texts per request
+- Add concurrent worker distribution via NATS
+- Return aggregated results with request IDs"
 
-BREAKING: 24-node workflow replaces 40-node sequential"
+# Worker fix
+git commit -m "fix(semantic): handle embedding timeout gracefully
 
-# Arbiter fix
-git commit -m "fix(arbiter): handle branch degradation correctly
+- Add 2000ms timeout for embedding generation
+- Return degraded result instead of error
+- Log warning for monitoring"
 
-- Recalculate weights when branch unavailable
-- Default to BLOCK on all branches failed
-- Add timeout handling for Branch C"
+# Security fix
+git commit -m "security(nats): add TLS for production connections
 
-# Test update
-git commit -m "test(arbiter): add decision engine tests
+- Configure TLS certificates for NATS
+- Update worker connection strings
+- Add cert rotation documentation"
 
-- Add arbiter-decision.test.js
-- Test weighted fusion calculation
-- Test branch degradation scenarios"
+# Infrastructure change
+git commit -m "chore(docker): optimize worker images
+
+- Use multi-stage builds for smaller images
+- Pin Node.js version to 20.18-alpine
+- Reduce image size by 40%"
 ```
 
 ---
 
 **Format:** Conventional Commits 1.0.0
 **Validation:** Pre-commit hooks (AI attribution check)
-**Scopes:** Updated for v2.0.0 (heuristics, semantic, arbiter)
+**Scopes:** Updated for Enterprise (NATS workers, packages)
 **CRITICAL:** NO AI ATTRIBUTION IN COMMITS
+
+## Version History
+
+- **v1.0.0** (Current): Enterprise NATS worker scopes, pnpm integration
+- **v0.x** (PoC): Legacy scopes, npm integration

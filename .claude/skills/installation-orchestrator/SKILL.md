@@ -1,111 +1,190 @@
 ---
 name: installation-orchestrator
-description: Expert management of install.sh (2000+ lines). Use for installation troubleshooting, idempotency checks, secret generation, volume migration, 11 services startup order (including heuristics and semantic), and user onboarding.
+description: Expert management of installation for Vigil Guard Enterprise. Use for installation troubleshooting, idempotency checks, secret generation, Docker Compose orchestration, NATS worker startup, and user onboarding.
 version: 2.0.0
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
 ---
 
-# Installation Orchestrator (v2.0.0)
+# Installation Orchestrator (Enterprise)
 
 ## Overview
 
-Expert management of install.sh (2000+ lines bash) including idempotency, secret generation, volume migration, 11-service orchestration with 3-branch detection startup, and troubleshooting installation failures.
+Expert management of Vigil Guard Enterprise installation including idempotency, secret generation, Docker Compose orchestration, NATS worker startup order, and troubleshooting installation failures.
 
 ## When to Use This Skill
 
 - Troubleshooting installation failures
-- Managing install.sh modifications
+- Managing Docker Compose modifications
 - Secret generation and validation
 - Volume migration between versions
 - Idempotency checks
 - User onboarding flow
-- 3-branch service startup order (v2.0.0)
+- NATS worker startup order
 
-## v2.0.0 Architecture
+---
 
-### 11 Docker Services
+## Docker Compose Architecture (CRITICAL)
+
+### Three-File Strategy
+
+This project uses a **split Docker Compose architecture**:
+
+| File | Purpose |
+|------|---------|
+| `infra/docker/docker-compose.base.yml` | Base configuration with all services |
+| `infra/docker/docker-compose.dev.yml` | Development builds, init services |
+| `infra/docker/docker-compose.prod.yml` | Production GHCR images |
+
+### Starting Services
+
+**Development (local builds):**
+```bash
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d
+```
+
+**Production (pre-built images):**
+```bash
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.prod.yml up -d
+```
+
+**Environment variable shorthand:**
+```bash
+export COMPOSE_FILE=infra/docker/docker-compose.base.yml:infra/docker/docker-compose.dev.yml
+docker compose up -d
+```
+
+---
+
+## Enterprise Architecture
+
+### Service Inventory
 
 ```yaml
-Core Services:
-  - clickhouse (data storage, port 8123)
-  - grafana (monitoring, port 3001)
-  - n8n (workflow engine, port 5678)
+Infrastructure (base.yml):
+  - traefik (Reverse proxy, ports 80, 443)
+  - nats (NATS JetStream, ports 4222, 8222)
+  - redis (Cache, port 6379)
+  - clickhouse (Analytics, ports 8123, 9000)
+  - qdrant (Vector DB, ports 6333, 6334)
+  - prometheus (Metrics, port 9090)
 
-3-Branch Detection (v2.0.0):
-  - heuristics-service (Branch A, port 5005, 30% weight)
-  - semantic-service (Branch B, port 5006, 35% weight)
-  - prompt-guard-api (Branch C, port 8000, 35% weight)
+API Layer:
+  - api (REST API, port 8787)
 
-PII Detection:
-  - presidio-pii-api (port 5001)
-  - language-detector (port 5002)
+Node.js Workers:
+  - detection-worker (Heuristics, port 9466)
+  - semantic-worker (Embeddings, port 9465)
+  - pii-worker (PII coordination, port 9464)
+  - arbiter-worker (Decision fusion, port 9464)
+  - logging-worker (ClickHouse ingestion, port 9464)
+  - llm-guard-worker (LLM Guard orchestration, port 9464)
+
+Python Services (NATS Request-Reply):
+  - presidio-api (Presidio PII detection)
+  - language-detector (Language detection)
+  - llm-guard (Llama Prompt Guard 2)
 
 Web Interface:
-  - web-ui-backend (port 8787)
-  - web-ui-frontend (via proxy)
-  - proxy (Caddy, port 80)
+  - web-ui-backend (Config API, port 8788)
+  - web-ui-frontend (React SPA, port 80)
+
+Init Services (dev.yml only):
+  - init-nats (Seeds JetStream streams and KV)
+  - init-qdrant (Loads pre-computed embeddings)
+  - init-api-data (Sets volume ownership)
 ```
+
+---
 
 ## Installation Flow
 
 ### 1. Pre-flight Checks
 
 ```bash
-- Docker installed and running
-- Ports available (80, 5678, 8123, 3001, 8787, 5005, 5006, 8000)
-- Disk space >10GB
-- No existing .install-state.lock
+# Docker and Docker Compose installed
+docker --version
+docker compose version
+
+# pnpm installed
+pnpm --version
+
+# Check disk space (>10GB)
+df -h .
+
+# Check memory (>8GB recommended)
+free -h
 ```
 
 ### 2. Secret Generation
 
+Create `.env` file with required secrets:
+
 ```bash
+# Generate secrets
+NATS_USER=vigil
+NATS_PASSWORD=$(openssl rand -base64 32)
+REDIS_PASSWORD=$(openssl rand -base64 32)
+CLICKHOUSE_USER=vigil
 CLICKHOUSE_PASSWORD=$(openssl rand -base64 32)
-GF_SECURITY_ADMIN_PASSWORD=$(openssl rand -base64 32)
-SESSION_SECRET=$(openssl rand -base64 64)
 JWT_SECRET=$(openssl rand -base64 32)
-WEB_UI_ADMIN_PASSWORD=$(openssl rand -base64 24)
+ADMIN_PASSWORD=$(openssl rand -base64 24)
 ```
 
-### 3. Service Startup Order (v2.0.0)
+### 3. Service Startup Order (Enterprise)
 
 ```yaml
-Phase 1 - Data Layer:
-  1. clickhouse (data storage)
-  2. grafana (monitoring)
+Phase 1 - Infrastructure:
+  1. traefik (Reverse proxy)
+  2. nats (NATS JetStream messaging)
+  3. redis (Caching)
+  4. clickhouse (Analytics storage)
+  5. qdrant (Vector search)
+  6. prometheus (Metrics)
 
-Phase 2 - Detection Core:
-  3. n8n (workflow engine)
-  4. heuristics-service (Branch A - fast pattern matching)
-  5. semantic-service (Branch B - embedding analysis)
-  6. prompt-guard-api (Branch C - LLM validation, optional)
+Phase 2 - Init Services (dev only):
+  7. init-api-data (Sets volume ownership)
+  8. init-nats (Seeds JetStream streams and KV)
+  9. init-qdrant (Loads embeddings)
 
-Phase 3 - PII Services:
-  7. presidio-pii-api (dual-language PII)
-  8. language-detector (hybrid detection)
+Phase 3 - Python Services:
+  10. presidio-api (PII detection)
+  11. language-detector (Language detection)
+  12. llm-guard (Prompt Guard)
 
-Phase 4 - Web Interface:
-  9. web-ui-backend (Express API)
-  10. web-ui-frontend (React app)
-  11. proxy (Caddy reverse proxy)
+Phase 4 - Workers (NATS Consumers):
+  13. detection-worker (Heuristics)
+  14. semantic-worker (Embeddings)
+  15. pii-worker (PII coordination)
+  16. arbiter-worker (Decision fusion)
+  17. logging-worker (ClickHouse writer)
+  18. llm-guard-worker (LLM Guard orchestration)
+
+Phase 5 - API & Web:
+  19. api (REST API, port 8787)
+  20. web-ui-backend (Config API, port 8788)
+  21. web-ui-frontend (React app)
 ```
 
-### 4. Health Checks (v2.0.0)
+### 4. Health Checks (Enterprise)
 
 ```bash
-# Core services
-for service in clickhouse grafana n8n web-ui; do
-  wait_for_health $service 120s || fail
-done
+# Infrastructure
+curl -f http://localhost:8222/healthz  # NATS
+curl -f http://localhost:8123/ping     # ClickHouse
+curl -f http://localhost:6333/health   # Qdrant
 
-# 3-Branch detection services (v2.0.0)
-wait_for_health heuristics-service 60s || warn "Branch A degraded"
-wait_for_health semantic-service 90s || warn "Branch B degraded"
-wait_for_health prompt-guard-api 120s || warn "Branch C degraded"
+# Workers
+curl -f http://localhost:9466/health   # detection-worker
+curl -f http://localhost:9465/health   # semantic-worker
 
-# PII services
-wait_for_health presidio-pii-api 90s || warn "PII detection degraded"
-wait_for_health language-detector 30s || warn "Language detection degraded"
+# API
+curl -k https://api.vigilguard/health
+
+# Web UI
+curl -k https://app.vigilguard/api/health
+
+# NATS consumers
+docker exec -it $(docker ps -qf name=nats) nats consumer ls VIGIL_DETECTION
 ```
 
 ### 5. Idempotency Lock
@@ -113,22 +192,33 @@ wait_for_health language-detector 30s || warn "Language detection degraded"
 ```bash
 touch .install-state.lock
 echo "INSTALL_DATE=$(date)" >> .install-state.lock
-echo "VERSION=2.0.0" >> .install-state.lock
-echo "SERVICES=11" >> .install-state.lock
+echo "VERSION=1.0.0" >> .install-state.lock
+echo "ARCHITECTURE=nats-workers-v2" >> .install-state.lock
 ```
+
+---
 
 ## Common Tasks
 
 ### Task 1: Fresh Installation
 
 ```bash
-./install.sh
+# Clone repository
+git clone https://github.com/vigil-guard/vigil-guard-enterprise.git
+cd vigil-guard-enterprise
 
-# Prompts:
-# 1. Generate secrets? [Y/n]
-# 2. Set admin password (or auto-generate)
-# 3. Delete existing vigil_data? [y/N]
-# 4. Download Llama model? [Y/n] (for Branch C)
+# Install dependencies
+pnpm install
+
+# Create secrets file
+cp .env.example .env
+# Edit .env with generated secrets
+
+# Start services (development)
+SECRETS_FILE=.env docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d
+
+# Verify workers
+docker exec -it $(docker ps -qf name=nats) nats consumer ls VIGIL_DETECTION
 ```
 
 ### Task 2: Troubleshoot Failed Installation
@@ -137,226 +227,214 @@ echo "SERVICES=11" >> .install-state.lock
 # Check state
 cat .install-state.lock
 
-# View logs
-docker-compose logs --tail=100
+# View all logs
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs --tail=100
 
-# Check 3-branch services specifically (v2.0.0)
-docker logs vigil-heuristics-service --tail 50
-docker logs vigil-semantic-service --tail 50
-docker logs vigil-prompt-guard-api --tail 50
+# Check specific worker
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs detection-worker --tail=50
 
 # Retry specific service
-docker-compose up -d heuristics-service
-docker logs vigil-heuristics-service
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d --build detection-worker
 
 # Clean slate
-rm .install-state.lock .env vigil_data -rf
-./install.sh
+rm .install-state.lock .env -f
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml down -v
 ```
 
 ### Task 3: Validate Environment
 
 ```bash
-./scripts/validate-env.sh
+# Check Docker Compose config
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml config
 
-# Checks:
-# - All required env vars present
-# - Passwords meet requirements (min 8 chars)
-# - Ports not in use (including 5005, 5006 for branches)
-# - Docker network exists (vigil-net)
-# - 11 services defined in docker-compose.yml
+# Check env vars
+grep -E "(NATS|CLICKHOUSE|JWT|REDIS)_" .env
+
+# Check Docker network
+docker network inspect vge_vigil-network
 ```
 
-### Task 4: Migrate Volumes (v1.x → v2.0.0)
-
-```bash
-# Backup old data
-docker run --rm -v vigil_clickhouse_data:/data -v $(pwd):/backup alpine \
-  tar czf /backup/clickhouse-v1.x-$(date +%Y%m%d).tar.gz /data
-
-# Run v2.0.0 migration SQL (adds branch columns)
-docker exec vigil-clickhouse clickhouse-client < services/monitoring/sql/migrations/v2.0.0.sql
-
-# Verify migration (branch columns added)
-docker exec vigil-clickhouse clickhouse-client -q "
-  DESCRIBE n8n_logs.events_processed
-" | grep -E "branch_[abc]_score|arbiter_decision"
-
-# Expected output:
-# branch_a_score    Float32
-# branch_b_score    Float32
-# branch_c_score    Float32
-# arbiter_decision  String
-```
-
-### Task 5: Verify 3-Branch Services (v2.0.0)
+### Task 4: Verify NATS Workers
 
 ```bash
 #!/bin/bash
-# scripts/verify-branches.sh
 
-echo "🔍 Verifying 3-Branch Detection Services..."
+echo "Verifying NATS Workers..."
 
-# Branch A: Heuristics
-BRANCH_A=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5005/health)
-if [ "$BRANCH_A" == "200" ]; then
-  echo "✅ Branch A (Heuristics): Healthy"
-else
-  echo "❌ Branch A (Heuristics): Down (HTTP $BRANCH_A)"
-fi
-
-# Branch B: Semantic
-BRANCH_B=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5006/health)
-if [ "$BRANCH_B" == "200" ]; then
-  echo "✅ Branch B (Semantic): Healthy"
-else
-  echo "❌ Branch B (Semantic): Down (HTTP $BRANCH_B)"
-fi
-
-# Branch C: LLM Guard
-BRANCH_C=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
-if [ "$BRANCH_C" == "200" ]; then
-  echo "✅ Branch C (LLM Guard): Healthy"
-else
-  echo "⚠️  Branch C (LLM Guard): Down (HTTP $BRANCH_C) - Optional"
-fi
-
-echo ""
-echo "3-Branch Status: $([ "$BRANCH_A" == "200" ] && [ "$BRANCH_B" == "200" ] && echo "OPERATIONAL" || echo "DEGRADED")"
+# Check workers via NATS
+for worker in detection-worker semantic-worker pii-worker arbiter-worker logging-worker llm-guard-worker; do
+  STATUS=$(docker exec -it $(docker ps -qf name=nats) nats consumer info VIGIL_DETECTION $worker 2>/dev/null | grep -c "ack pending")
+  if [ "$STATUS" -ge 0 ]; then
+    echo "$worker: Connected"
+  else
+    echo "$worker: Not connected"
+  fi
+done
 ```
+
+---
 
 ## Troubleshooting
 
-### Issue: Port already in use
+### Issue: Service won't start
 
 ```bash
-# Check all v2.0.0 ports
-for port in 80 5678 8123 3001 8787 5001 5002 5005 5006 8000; do
-  lsof -i :$port && echo "Port $port in use"
-done
+# Check logs
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs <service-name>
 
-# Kill specific process
-kill -9 $(lsof -t -i:5005)
+# Check configuration
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml config | grep -A 20 <service-name>
+
+# Rebuild
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d --build <service-name>
 ```
 
-### Issue: Branch service won't start
+### Issue: Worker won't start
 
 ```bash
-# Check heuristics-service
-docker logs vigil-heuristics-service --tail 100
-# Common issue: missing patterns directory
-# Fix: docker-compose build heuristics-service
+# Check detection-worker
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs detection-worker --tail=100
+# Common issue: NATS not ready
+# Fix: Ensure init-nats completed successfully
 
-# Check semantic-service
-docker logs vigil-semantic-service --tail 100
-# Common issue: model download failed
-# Fix: docker exec vigil-semantic-service python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+# Check semantic-worker
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs semantic-worker --tail=100
+# Common issue: Qdrant not ready
+# Fix: Ensure init-qdrant completed successfully
+
+# Check arbiter-worker
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs arbiter-worker --tail=100
+# Common issue: Config not in NATS KV
+# Fix: Restart init-nats
 ```
 
 ### Issue: ClickHouse won't start
 
 ```bash
 # Check volume permissions
-ls -la vigil_data/clickhouse/
+docker volume inspect vge_clickhouse-data
 
 # Reset volume
-docker-compose down -v
-docker volume rm vigil_clickhouse_data
-./install.sh
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml down
+docker volume rm vge_clickhouse-data
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d
 ```
 
 ### Issue: Secrets not loaded
 
 ```bash
-# Verify .env file
-cat .env | grep -E "(CLICKHOUSE|JWT|SESSION)_"
+# Verify SECRETS_FILE is set
+echo $SECRETS_FILE
 
-# Reload
-docker-compose down
-docker-compose up -d
+# Verify .env file exists
+ls -la .env
+
+# Reload services
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml down
+SECRETS_FILE=.env docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d
 ```
 
-### Issue: Semantic service model download fails
+### Issue: NATS connection refused
 
 ```bash
-# Pre-download model (run before install)
-docker run --rm -v vigil_semantic_models:/models python:3.11-slim bash -c "
-  pip install sentence-transformers &&
-  python -c \"from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/models')\"
-"
+# Check NATS is running
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml ps nats
 
-# Restart semantic service
-docker-compose restart semantic-service
-```
+# Check NATS logs
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs nats
 
-## Port Reference (v2.0.0)
-
-| Port | Service | Description |
-|------|---------|-------------|
-| 80 | proxy | Caddy reverse proxy (main entry) |
-| 3001 | grafana | Monitoring dashboard |
-| 5001 | presidio-pii-api | Dual-language PII detection |
-| 5002 | language-detector | Hybrid language detection |
-| 5005 | heuristics-service | Branch A (30% weight) |
-| 5006 | semantic-service | Branch B (35% weight) |
-| 5678 | n8n | Workflow engine |
-| 8000 | prompt-guard-api | Branch C (35% weight) |
-| 8123 | clickhouse | Analytics database |
-| 8787 | web-ui-backend | Configuration API |
-
-## Quick Reference
-
-```bash
-# Fresh install
-./install.sh
-
-# Status check (all 11 services)
-./scripts/status.sh
-
-# Verify 3-branch detection (v2.0.0)
-./scripts/verify-branches.sh
-
-# View logs
-./scripts/logs.sh
-
-# Restart
-./scripts/restart.sh
-
-# Uninstall
-docker-compose down -v
-rm -rf vigil_data .env .install-state.lock
-```
-
-## Integration Points
-
-### With docker-vigil-orchestration:
-```yaml
-when: Service won't start
-action:
-  1. Check vigil-net network connectivity
-  2. Verify service dependencies
-  3. Check port conflicts
-  4. Review Docker resource limits
-```
-
-### With clickhouse-grafana-monitoring:
-```yaml
-when: Migration to v2.0.0
-action:
-  1. Run SQL migration script
-  2. Verify branch columns exist
-  3. Test ClickHouse queries
-  4. Update Grafana dashboards
+# Verify JetStream is enabled
+curl http://localhost:8222/healthz
 ```
 
 ---
 
-**Last Updated:** 2025-12-09
-**Install Script:** 2000+ lines bash
-**Services:** 11 containers (v2.0.0)
-**3-Branch Ports:** 5005 (Heuristics), 5006 (Semantic), 8000 (LLM Guard)
+## Port Reference (Enterprise)
 
-## Version History
+| Port | Service | Description |
+|------|---------|-------------|
+| 80, 443 | traefik | Reverse proxy with TLS |
+| 4222 | nats | NATS JetStream messaging |
+| 8222 | nats | NATS monitoring |
+| 6379 | redis | Cache |
+| 8123 | clickhouse | Analytics database |
+| 9000 | clickhouse | Native protocol |
+| 6333 | qdrant | Vector search REST |
+| 6334 | qdrant | Vector search gRPC |
+| 9090 | prometheus | Metrics |
+| 8787 | api | Public REST API |
+| 8788 | web-ui-backend | Configuration API |
+| 9464-9466 | workers | Health endpoints |
 
-- **v2.0.0** (Current): 11 services, 3-branch detection startup, migration scripts
-- **v1.6.11**: 9 services, sequential detection
+---
+
+## Quick Reference
+
+```bash
+# Fresh install (development)
+pnpm install
+SECRETS_FILE=.env docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml up -d
+
+# Status check
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml ps
+
+# View logs
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml logs -f
+
+# Restart all
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml restart
+
+# Stop all
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml down
+
+# Stop and remove volumes
+docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-compose.dev.yml down -v
+```
+
+---
+
+## Integration Points
+
+### With docker-orchestration skill:
+```yaml
+when: Service won't start
+action:
+  1. Check vigil-network connectivity
+  2. Verify service dependencies
+  3. Check health conditions
+  4. Review Docker resource limits
+```
+
+### With nats-messaging skill:
+```yaml
+when: Worker not consuming
+action:
+  1. Verify init-nats completed
+  2. Check consumer configuration
+  3. Verify VIGIL_DETECTION stream exists
+  4. Check NATS KV for config
+```
+
+### ClickHouse Analytics Troubleshooting:
+```yaml
+when: Analytics not working
+action:
+  1. Verify ClickHouse is healthy
+  2. Check logging-worker is consuming
+  3. Verify events_v2 table exists
+```
+
+---
+
+## References
+
+- Docker Compose (base): `infra/docker/docker-compose.base.yml`
+- Docker Compose (dev): `infra/docker/docker-compose.dev.yml`
+- Docker Compose (prod): `infra/docker/docker-compose.prod.yml`
+- Repository State: `.claude/core/repository-state.md`
+
+---
+
+**Last Updated:** 2025-01-11
+**Architecture:** NATS JetStream Workers (three-file compose)
+**Services:** 18+ services across 5 phases

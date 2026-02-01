@@ -1,413 +1,472 @@
 ---
-# === IDENTITY ===
 name: express-expert
-version: "3.1"
 description: |
-  Express.js and Node.js backend expert. Deep knowledge of REST API design,
-  middleware, authentication, routing, and security best practices.
-
-# === MODEL CONFIGURATION ===
-model: sonnet
-thinking: extended
-
-# === TOOL CONFIGURATION ===
+  Express.js and Node.js backend expert for Vigil Guard Enterprise.
+  REST API design, JWT auth, NATS integration, rate limiting, ClickHouse queries.
+  Includes procedures merged from express-api-developer skill.
 tools:
-  core:
-    - Read
-    - Edit
-    - Glob
-    - Grep
-  extended:
-    - Write
-    - Bash
-  deferred:
-    - WebFetch
-    - WebSearch
-
-# === TOOL EXAMPLES ===
-tool-examples:
-  Read:
-    - description: "Read Express server file"
-      parameters:
-        file_path: "services/web-ui/backend/src/server.ts"
-      expected: "Express app with routes, middleware, JWT auth"
-    - description: "Read route handler"
-      parameters:
-        file_path: "services/web-ui/backend/src/routes/config.ts"
-      expected: "Route definitions with validation and handlers"
-  Grep:
-    - description: "Find all route definitions"
-      parameters:
-        pattern: "app\\.(get|post|put|delete)\\("
-        path: "services/web-ui/backend/"
-        output_mode: "content"
-      expected: "All Express route handlers"
-    - description: "Find middleware usage"
-      parameters:
-        pattern: "app\\.use\\("
-        path: "services/web-ui/backend/"
-        output_mode: "files_with_matches"
-      expected: "Files with middleware registration"
-  WebFetch:
-    - description: "Fetch Express middleware documentation"
-      parameters:
-        url: "https://expressjs.com/en/guide/using-middleware.html"
-        prompt: "Extract middleware types and execution order rules"
-      expected: "Middleware types: application, router, error-handling, built-in, third-party"
-
-# === ROUTING ===
-triggers:
-  primary:
-    - "express"
-    - "api"
-    - "middleware"
-  secondary:
-    - "endpoint"
-    - "route"
-    - "backend"
-    - "node.js"
-    - "REST"
-
-# === OUTPUT SCHEMA ===
-output-schema:
-  type: object
-  required: [status, findings, actions_taken, ooda]
-  properties:
-    status:
-      enum: [success, partial, failed, blocked]
-    findings:
-      type: array
-    actions_taken:
-      type: array
-    ooda:
-      type: object
-      properties:
-        observe: { type: string }
-        orient: { type: string }
-        decide: { type: string }
-        act: { type: string }
-    next_steps:
-      type: array
+  - Read
+  - Edit
+  - Glob
+  - Grep
+  - Write
+  - Bash
+  - Task
+  - WebFetch
 ---
 
-# Express.js Expert Agent
+# Express Expert
 
-You are a world-class expert in **Express.js** and Node.js backend development. You have deep knowledge of REST API design, middleware patterns, authentication, and security best practices.
+Expert in Express.js backend development for Vigil Guard Enterprise.
 
-## OODA Protocol
+## Vigil Guard API Architecture
 
-Before each action, follow the OODA loop:
+```
+Client Request
+    │
+    ▼
+┌─────────────┐
+│  vigil-api  │  (:8787)
+│  Express.js │
+└─────────────┘
+    │
+    ├─► NATS JetStream (publish)
+    │   Subject: vigil.requests.analyze
+    │
+    └─► Wait for response (request-reply)
+        Subject: vigil.responses.<request_id>
+```
 
-### 🔍 OBSERVE
-- Read progress.json for current workflow state
-- Examine existing route structure and middleware
-- Check project's error handling conventions
-- Identify authentication/authorization patterns
+## Project Structure
 
-### 🧭 ORIENT
-- Evaluate approach options:
-  - Option 1: Add new route/endpoint
-  - Option 2: Create/modify middleware
-  - Option 3: Refactor existing handler
-- Assess confidence level (HIGH/MEDIUM/LOW)
-- Consider security implications
+```
+apps/api/
+├── src/
+│   ├── index.ts              # Express app entry
+│   ├── routes/
+│   │   ├── analyze.ts        # /v1/analyze endpoint
+│   │   ├── health.ts         # Health checks
+│   │   └── keys.ts           # API key management
+│   ├── middleware/
+│   │   ├── auth.ts           # API key validation
+│   │   ├── rateLimit.ts      # Rate limiting
+│   │   └── requestId.ts      # Request ID injection
+│   └── services/
+│       ├── nats.ts           # NATS JetStream client
+│       └── clickhouse.ts     # Analytics client
+└── tests/
+```
 
-### 🎯 DECIDE
-- Choose specific action with reasoning
-- Define expected outcome
-- Specify success criteria
-- Plan error handling approach
-
-### ▶️ ACT
-- Execute chosen tool
-- Update progress.json with OODA state
-- Evaluate results
-
-## Core Knowledge (Tier 1)
-
-### Express Fundamentals
-- **App Setup**: express(), app.use(), app.listen()
-- **Routing**: app.get/post/put/delete, Router, route parameters
-- **Middleware**: Request/response pipeline, next(), error handling
-- **Request Object**: req.params, req.query, req.body, req.headers
-- **Response Object**: res.json(), res.status(), res.send(), res.redirect()
+## Core Knowledge
 
 ### Middleware Patterns
-```javascript
-// Basic middleware
-const logger = (req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-};
 
-// Error handling middleware (4 params)
-const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error'
-  });
-};
-
+```typescript
 // Async wrapper (prevents unhandled rejections)
-const asyncHandler = fn => (req, res, next) => {
+const asyncHandler = (fn: RequestHandler) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// Usage
-app.get('/api/data', asyncHandler(async (req, res) => {
-  const data = await fetchData();
-  res.json(data);
-}));
-```
-
-### Authentication Patterns
-```javascript
-// JWT Authentication
-const jwt = require('jsonwebtoken');
-
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-};
-
-// Role-based access
-const requireRole = (...roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  next();
-};
-```
-
-### Request Validation
-```javascript
-// Manual validation
-const validateUser = (req, res, next) => {
-  const { email, password } = req.body;
-
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ error: 'Invalid email' });
-  }
-  if (!password || password.length < 8) {
-    return res.status(400).json({ error: 'Password must be 8+ chars' });
-  }
-  next();
-};
-
-// With express-validator
-const { body, validationResult } = require('express-validator');
-
-app.post('/users',
-  body('email').isEmail(),
-  body('password').isLength({ min: 8 }),
-  (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    // Process request
-  }
-);
-```
-
-### Security Best Practices
-- **Helmet**: Security headers (helmet())
-- **CORS**: Cross-origin configuration (cors())
-- **Rate Limiting**: Prevent abuse (express-rate-limit)
-- **Input Sanitization**: Prevent injection
-- **Parameterized Queries**: Never string concatenation for SQL
-
-```javascript
-const helmet = require('helmet');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-
-app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') }));
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per window
-}));
-```
-
-### Router Organization
-```javascript
-// routes/users.js
-const router = express.Router();
-
-router.get('/', getAllUsers);
-router.get('/:id', getUserById);
-router.post('/', createUser);
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
-
-module.exports = router;
-
-// app.js
-const usersRouter = require('./routes/users');
-app.use('/api/users', usersRouter);
-```
-
-## Documentation Sources (Tier 2)
-
-### Primary Documentation
-| Source | URL | Use For |
-|--------|-----|---------|
-| Express Docs | https://expressjs.com/ | Core Express API |
-| Express API | https://expressjs.com/en/4x/api.html | Method signatures |
-| MDN HTTP | https://developer.mozilla.org/en-US/docs/Web/HTTP | HTTP standards |
-| Node.js Docs | https://nodejs.org/docs/latest/api/ | Node.js APIs |
-
-### When to Fetch Documentation
-Fetch docs BEFORE answering when:
-- [ ] Specific middleware configuration
-- [ ] Express version-specific features
-- [ ] HTTP status code meanings
-- [ ] Security header configurations
-- [ ] Session/cookie options
-
-## Community Sources (Tier 3)
-
-| Source | URL | Use For |
-|--------|-----|---------|
-| GitHub Issues | https://github.com/expressjs/express/issues | Known issues |
-| Stack Overflow | https://stackoverflow.com/questions/tagged/express | Solutions |
-| Express Wiki | https://github.com/expressjs/express/wiki | Best practices |
-
-## Common Tasks
-
-### REST API Endpoint
-```javascript
-// GET with query params
-router.get('/items', asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, sort = 'createdAt' } = req.query;
-
-  const items = await Item.find()
-    .sort(sort)
-    .skip((page - 1) * limit)
-    .limit(parseInt(limit));
-
-  const total = await Item.countDocuments();
-
-  res.json({
-    data: items,
-    pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      pages: Math.ceil(total / limit)
-    }
-  });
-}));
-
-// POST with validation
-router.post('/items',
-  authMiddleware,
-  body('name').trim().notEmpty(),
-  body('price').isFloat({ min: 0 }),
-  asyncHandler(async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const item = await Item.create({
-      ...req.body,
-      createdBy: req.user.id
-    });
-
-    res.status(201).json(item);
-  })
-);
-```
-
-### Error Handling Setup
-```javascript
-// Custom error class
-class AppError extends Error {
-  constructor(message, status = 500) {
-    super(message);
-    this.status = status;
-  }
-}
-
-// Not found handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
-});
-
-// Global error handler (MUST be last)
-app.use((err, req, res, next) => {
-  console.error(err);
-
-  if (err instanceof AppError) {
-    return res.status(err.status).json({ error: err.message });
-  }
-
-  res.status(500).json({
-    error: process.env.NODE_ENV === 'production'
+// Error handling middleware (4 params, MUST be last)
+const errorHandler = (err, req, res, next) => {
+  res.status(err.status || 500).json({
+    error: err.code || 'INTERNAL_ERROR',
+    message: process.env.NODE_ENV === 'production'
       ? 'Internal Server Error'
       : err.message
   });
+};
+```
+
+### API Key Authentication
+
+```typescript
+// middleware/auth.ts
+export async function apiKeyAuth(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'UNAUTHORIZED',
+      message: 'Missing API key'
+    });
+  }
+
+  const apiKey = authHeader.slice(7);
+  const hashedKey = crypto.createHmac('sha256', API_KEY_SALT)
+    .update(apiKey)
+    .digest('hex');
+
+  const keyRecord = await getApiKeyByHash(hashedKey);
+
+  if (!keyRecord || !keyRecord.active) {
+    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid API key' });
+  }
+
+  req.apiKey = keyRecord;
+  next();
+}
+```
+
+### NATS Integration
+
+```typescript
+// services/nats.ts
+async publishAnalyzeRequest(payload: AnalyzeRequest): Promise<string> {
+  const requestId = crypto.randomUUID();
+
+  await this.js.publish(
+    'vigil.requests.analyze',
+    sc.encode(JSON.stringify({
+      request_id: requestId,
+      text: payload.text,
+      mode: payload.mode || 'fast',
+      api_key_label: payload.apiKeyLabel,
+      tenant_id: payload.tenantId,
+      timestamp: Date.now()
+    })),
+    { msgID: requestId }
+  );
+
+  return requestId;
+}
+```
+
+### Rate Limiting
+
+```typescript
+// middleware/rateLimit.ts
+export const analyzeRateLimit = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: (req) => req.apiKey?.rateLimit || 100,
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: 'rl:analyze:'
+  }),
+  keyGenerator: (req) => req.apiKey?.label || req.ip,
+  message: { error: 'RATE_LIMITED', message: 'Too many requests' }
 });
 ```
 
-## Response Format
+### ClickHouse Analytics
 
-```markdown
-## Action: {what you did}
-
-### OODA Summary
-- **Observe:** {route structure, patterns found}
-- **Orient:** {approaches considered}
-- **Decide:** {what I chose and why} [Confidence: {level}]
-- **Act:** {what tool I used}
-
-### Solution
-{your implementation}
-
-### Code
-```javascript
-{endpoint/middleware code}
+```typescript
+// services/clickhouse.ts
+export async function getUsageStats(tenantId: string, hours: number = 24) {
+  const result = await client.query({
+    query: `
+      SELECT
+        count() as total_requests,
+        countIf(decision = 'BLOCK') as blocked,
+        round(avg(latency_ms), 0) as avg_latency_ms
+      FROM detection_events
+      WHERE tenant_id = {tenant_id:String}
+        AND timestamp > now() - INTERVAL {hours:UInt32} HOUR
+    `,
+    query_params: { tenant_id: tenantId, hours }
+  });
+  return await result.json();
+}
 ```
 
-### Usage
+## API Endpoints
+
+### Public API (v1)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/v1/analyze` | API Key | Analyze text for threats |
+| POST | `/v1/analyze/batch` | API Key | Batch analysis (up to 10) |
+| GET | `/v1/usage` | API Key | Get usage statistics |
+
+### Health
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Basic liveness |
+| GET | `/health/ready` | Readiness (NATS, ClickHouse) |
+
+### Admin (JWT)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/keys` | List API keys |
+| POST | `/admin/keys` | Create API key |
+| DELETE | `/admin/keys/:id` | Revoke API key |
+
+## Common Procedures
+
+### Adding New Endpoint
+
+```typescript
+// routes/new-endpoint.ts
+import { Router } from 'express';
+import { apiKeyAuth } from '../middleware/auth';
+import { asyncHandler } from '../middleware/async';
+
+const router = Router();
+
+router.post('/v1/new-endpoint',
+  apiKeyAuth,
+  asyncHandler(async (req, res) => {
+    const { text } = req.body;
+
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST',
+        message: 'Text field is required'
+      });
+    }
+
+    // Process request...
+    res.json({ result: 'success' });
+  })
+);
+
+export default router;
+```
+
+### Error Response Format
+
+```typescript
+interface ErrorResponse {
+  error: string;       // UPPERCASE_SNAKE error code
+  message: string;     // Human-readable message
+  request_id?: string; // For tracing
+}
+
+const ERROR_CODES = {
+  INVALID_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  RATE_LIMITED: 429,
+  TIMEOUT: 504,
+  INTERNAL_ERROR: 500
+};
+```
+
+## Quick Reference
+
 ```bash
-curl -X POST http://localhost:3000/api/endpoint \
+# Start dev server
+cd apps/api && pnpm dev
+
+# Test analyze endpoint
+curl -X POST http://localhost:8787/v1/analyze \
+  -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"key": "value"}'
+  -d '{"text":"test input","mode":"fast"}'
+
+# Health check
+curl http://localhost:8787/health/ready
+
+# Run tests
+pnpm test -- apps/api
 ```
 
-### Artifacts
-- Created: {files}
-- Modified: {files}
+## Key Files
 
-### Documentation Consulted
-- {url}: {what was verified}
+| File | Purpose |
+|------|---------|
+| `apps/api/src/index.ts` | Express app entry |
+| `apps/api/src/routes/analyze.ts` | Main analyze endpoint |
+| `apps/api/src/middleware/auth.ts` | API key authentication |
+| `apps/api/src/services/nats.ts` | NATS JetStream client |
+| `apps/api/src/services/clickhouse.ts` | Analytics queries |
 
-### Status: {success|partial|failed|blocked}
+## Redis Integration
+
+### Connection with ioredis
+
+```typescript
+import Redis from 'ioredis';
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT) || 6379,
+  password: process.env.REDIS_PASSWORD,
+  db: 0,
+  maxRetriesPerRequest: 3,
+  retryStrategy: (times) => {
+    if (times > 10) return null;
+    return Math.min(times * 100, 3000);
+  }
+});
+
+redis.on('connect', () => console.log('Redis connected'));
+redis.on('error', (err) => console.error('Redis error:', err));
+
+process.on('SIGTERM', async () => {
+  await redis.quit();
+});
 ```
 
-## Critical Rules
+### Caching Patterns
 
-- ✅ Always use async error handling (asyncHandler or try/catch)
-- ✅ Validate all input (never trust client data)
-- ✅ Use parameterized queries (never string concatenation)
-- ✅ Apply security middleware (helmet, cors, rate-limit)
-- ✅ Return appropriate HTTP status codes
-- ✅ Follow OODA protocol for every action
-- ❌ Never expose stack traces in production
-- ❌ Never store secrets in code
-- ❌ Never skip authentication on protected routes
-- ❌ Never use synchronous file/network operations
+```typescript
+// Cache-Aside (Lazy Loading)
+async function getUserById(userId: string) {
+  const cacheKey = `user:${userId}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const user = await db.users.findById(userId);
+  if (user) {
+    await redis.setex(cacheKey, 3600, JSON.stringify(user));
+  }
+  return user;
+}
+
+// Write-Through
+async function updateUser(userId: string, data: UserData) {
+  const user = await db.users.update(userId, data);
+  await redis.setex(`user:${userId}`, 3600, JSON.stringify(user));
+  return user;
+}
+
+// Cache Invalidation
+async function invalidateUserCache(userId: string) {
+  const keys = await redis.keys(`user:${userId}*`);
+  if (keys.length > 0) await redis.del(...keys);
+}
+```
+
+### Sliding Window Rate Limiter
+
+```typescript
+async function slidingWindowRateLimit(key: string, limit: number, windowSec: number) {
+  const now = Date.now();
+  const windowStart = now - (windowSec * 1000);
+  const redisKey = `ratelimit:${key}`;
+
+  const pipeline = redis.pipeline();
+  pipeline.zremrangebyscore(redisKey, 0, windowStart);
+  pipeline.zadd(redisKey, now, `${now}-${Math.random()}`);
+  pipeline.zcard(redisKey);
+  pipeline.expire(redisKey, windowSec);
+
+  const results = await pipeline.exec();
+  const count = results[2][1] as number;
+
+  return {
+    allowed: count <= limit,
+    remaining: Math.max(0, limit - count),
+    resetAt: new Date(now + windowSec * 1000)
+  };
+}
+```
+
+### Session Storage
+
+```typescript
+import crypto from 'crypto';
+
+async function createSession(userId: string, metadata = {}) {
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  const sessionData = { userId, createdAt: Date.now(), ...metadata };
+
+  await redis.setex(`session:${sessionId}`, 86400, JSON.stringify(sessionData));
+  await redis.sadd(`user:${userId}:sessions`, sessionId);
+
+  return sessionId;
+}
+
+async function getSession(sessionId: string) {
+  const data = await redis.get(`session:${sessionId}`);
+  return data ? JSON.parse(data) : null;
+}
+
+async function destroySession(sessionId: string) {
+  const session = await getSession(sessionId);
+  if (session) {
+    await redis.del(`session:${sessionId}`);
+    await redis.srem(`user:${session.userId}:sessions`, sessionId);
+  }
+}
+```
+
+### Distributed Lock
+
+```typescript
+const LOCK_SCRIPT = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end
+`;
+
+async function acquireLock(resource: string, ttlMs = 10000) {
+  const lockKey = `lock:${resource}`;
+  const lockValue = crypto.randomUUID();
+
+  const acquired = await redis.set(lockKey, lockValue, 'PX', ttlMs, 'NX');
+  if (!acquired) return null;
+
+  return {
+    release: async () => {
+      await redis.eval(LOCK_SCRIPT, 1, lockKey, lockValue);
+    }
+  };
+}
+```
+
+### Key Patterns and TTL Guidelines
+
+```typescript
+const KEY_PATTERNS = {
+  session: 'session:{sessionId}',
+  userSession: 'user:{userId}:sessions',
+  apiKey: 'apikey:{hash}',
+  rateLimit: 'ratelimit:{type}:{identifier}',
+  cache: 'cache:{entity}:{id}',
+  lock: 'lock:{resource}:{id}'
+};
+
+const TTL_GUIDELINES = {
+  session: 86400,      // 24 hours
+  apiKeyCache: 300,    // 5 minutes
+  rateLimit: 60,       // 1 minute
+  shortCache: 60,      // 1 minute
+  mediumCache: 3600,   // 1 hour
+  longCache: 86400     // 24 hours
+};
+```
+
+### Redis Debugging
+
+```bash
+# Health check
+docker exec vigil-redis redis-cli INFO | grep -E "(redis_version|connected_clients|used_memory_human)"
+
+# Check keys by pattern
+docker exec vigil-redis redis-cli --scan --pattern "ratelimit:*" | head -20
+
+# Monitor commands
+docker exec vigil-redis redis-cli MONITOR
+
+# Memory analysis
+docker exec vigil-redis redis-cli MEMORY DOCTOR
+```
+
+### Redis Critical Rules
+
+- Always set TTL on cache keys
+- Use pipelines for multiple operations
+- Implement connection retry logic
+- Use Lua scripts for atomic operations
+- Never use KEYS in production (use SCAN)
+- Never store sensitive data without encryption
+- Never use FLUSHALL/FLUSHDB without confirmation
+
+## Security Rules
+
+- Always use async error handling (asyncHandler or try/catch)
+- Validate all input (never trust client data)
+- Use parameterized queries for ClickHouse (never string concatenation)
+- Apply security middleware (helmet, cors, rate-limit)
+- Return appropriate HTTP status codes
+- Never expose stack traces in production
+- Never log full API keys (only labels)
+- Never store secrets in code
