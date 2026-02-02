@@ -4,8 +4,8 @@ A modernized, lightweight agent system for Claude Code based on **Anthropic's Co
 
 > **v4.1 Highlights:**
 > - 7 consolidated technology experts (down from 17)
-> - Cross-session memory system
-> - Python-based hooks (zero dependencies)
+> - Cross-session memory with co-modification tracking
+> - Python-based hooks with automatic cleanup
 > - Claude 4.5 handles token management automatically
 
 ## Philosophy
@@ -92,10 +92,12 @@ Agents   = WHO does the work (technology expertise)
 │   ├── protocols.md
 │   └── tool-schema.md
 │
-├── hooks/                     # Automation hooks (Python)
-│   ├── session-init.sh
-│   ├── safety-validator.py
-│   └── memory-writer.py
+├── hooks/                     # Automation hooks (11 active)
+│   ├── session-init.sh       # Session setup + cleanup
+│   ├── safety-validator.py   # Blocks destructive commands
+│   ├── memory-writer.py      # Persists learnings
+│   ├── co-modification-tracker.py  # Tracks file pairs
+│   └── ...
 │
 └── commands/                  # Slash commands
     ├── expert.md
@@ -105,23 +107,32 @@ Agents   = WHO does the work (technology expertise)
 
 ## Memory System
 
-Cross-session learning with automatic persistence:
+Cross-session learning with automatic persistence and cleanup:
 
 **How it works:**
-1. **SessionStart** - `session-init.sh` loads recent learnings into context
+1. **SessionStart** - `session-init.sh` loads recent learnings + cleans old caches
 2. **During Session** - Use `/remember` to save learnings
 3. **Stop** - `memory-writer.py` persists to permanent storage
+4. **Stop** - `co-modification-tracker.py` tracks file pairs edited together
 
 **Usage:**
 ```
 /remember learning Always use parameterized queries for ClickHouse
 /remember decision Use NATS request-reply for Python services
+/remember preference commit_style conventional
 ```
 
 **Files:**
 - `memory/learnings.json` - Lessons learned (max 100, FIFO rotation)
 - `memory/decisions.json` - Architectural decisions (max 50, FIFO)
 - `memory/preferences.json` - User style preferences
+- `memory/co-modifications.json` - File pairs edited together (max 50)
+
+**Automatic Cleanup:**
+| Target | Retention | Hook |
+|--------|-----------|------|
+| tsc-cache directories | 7 days | session-init.sh |
+| audit_logs/*.jsonl | 30 days | session-init.sh |
 
 ## Simplified Tool Categories
 

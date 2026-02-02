@@ -136,6 +136,15 @@
         ]
       },
       {
+        "_description": "Co-modification tracking: tracks files frequently edited together",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/co-modification-tracker.py"
+          }
+        ]
+      },
+      {
         "_description": "TypeScript build check: runs TSC on modified repos only",
         "hooks": [
           {

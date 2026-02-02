@@ -11,63 +11,62 @@ Exit codes:
 import json
 import re
 import sys
-from pathlib import Path
 
 
 DANGEROUS_BASH_PATTERNS = [
-    r'rm\s+-rf\s+/',
-    r'rm\s+-rf\s+\*',
-    r'rm\s+-rf\s+~',
-    r'rm\s+-rf\s+\$HOME',
-    r'rm\s+-rf\s+\$\{HOME\}',
-    r'rm\s+--no-preserve-root',
-    r'dd\s+.*of=/dev/',
-    r'mkfs\.',
-    r':\(\)\s*\{\s*:\|:&\s*\};:',
-    r'>\s*/dev/sd[a-z]',
-    r'chmod\s+-R\s+777\s+/',
-    r'chown\s+-R\s+.*\s+/',
-    r'DROP\s+DATABASE',
-    r'DROP\s+TABLE',
-    r'TRUNCATE\s+TABLE',
-    r'DELETE\s+FROM\s+\w+\s*;?\s*$',
-    r'docker\s+system\s+prune\s+-a?f',
-    r'docker\s+volume\s+prune\s+-f',
-    r'kubectl\s+delete\s+namespace',
-    r'kubectl\s+delete\s+--all',
-    r'helm\s+uninstall\s+--all',
-    r'git\s+push\s+.*--force.*main',
-    r'git\s+push\s+.*--force.*master',
-    r'git\s+reset\s+--hard\s+HEAD~',
+    r"rm\s+-rf\s+/",
+    r"rm\s+-rf\s+\*",
+    r"rm\s+-rf\s+~",
+    r"rm\s+-rf\s+\$HOME",
+    r"rm\s+-rf\s+\$\{HOME\}",
+    r"rm\s+--no-preserve-root",
+    r"dd\s+.*of=/dev/",
+    r"mkfs\.",
+    r":\(\)\s*\{\s*:\|:&\s*\};:",
+    r">\s*/dev/sd[a-z]",
+    r"chmod\s+-R\s+777\s+/",
+    r"chown\s+-R\s+.*\s+/",
+    r"DROP\s+DATABASE",
+    r"DROP\s+TABLE",
+    r"TRUNCATE\s+TABLE",
+    r"DELETE\s+FROM\s+\w+\s*;?\s*$",
+    r"docker\s+system\s+prune\s+-a?f",
+    r"docker\s+volume\s+prune\s+-f",
+    r"kubectl\s+delete\s+namespace",
+    r"kubectl\s+delete\s+--all",
+    r"helm\s+uninstall\s+--all",
+    r"git\s+push\s+.*--force.*main",
+    r"git\s+push\s+.*--force.*master",
+    r"git\s+reset\s+--hard\s+HEAD~",
 ]
 
 PROTECTED_FILE_PATTERNS = [
-    r'\.env$',
-    r'\.env\.(?!example)',  # Allow .env.example but block .env.local, .env.production, etc.
-    r'\.env\.local',
-    r'\.env\.production',
-    r'\.env\.development',
-    r'id_rsa',
-    r'id_ed25519',
-    r'id_dsa',
-    r'\.pem$',
-    r'\.key$',
-    r'credentials\.json',
-    r'secrets\.yaml',
-    r'secrets\.json',
-    r'\.aws/credentials',
-    r'\.kube/config',
-    r'JWT_SECRET',
-    r'API_KEY_SALT',
-    r'CLICKHOUSE_PASSWORD',
+    r"\.env$",
+    r"\.env\.(?!example)",  # Allow .env.example but block .env.local, .env.production, etc.
+    r"\.env\.local",
+    r"\.env\.production",
+    r"\.env\.development",
+    r"id_rsa",
+    r"id_ed25519",
+    r"id_dsa",
+    r"\.pem$",
+    r"\.key$",
+    r"credentials\.json",
+    r"secrets\.yaml",
+    r"secrets\.json",
+    r"\.aws/credentials",
+    r"\.kube/config",
+    r"JWT_SECRET",
+    r"API_KEY_SALT",
+    r"CLICKHOUSE_PASSWORD",
 ]
 
 PROTECTED_PATHS = [
-    'infra/secrets/',
-    '.claude/audit_logs/',
-    '~/.ssh/',
-    '~/.aws/',
-    '~/.kube/',
+    "infra/secrets/",
+    ".claude/audit_logs/",
+    "~/.ssh/",
+    "~/.aws/",
+    "~/.kube/",
 ]
 
 
@@ -106,12 +105,6 @@ def validate_tool_use(tool_name: str, tool_input: dict) -> tuple[bool, str]:
         file_path = tool_input.get("file_path", "")
         return is_protected_file(file_path)
 
-    elif tool_name == "Read":
-        file_path = tool_input.get("file_path", "")
-        for sensitive in ['.env', 'id_rsa', 'id_ed25519', '.pem', 'credentials']:
-            if sensitive in file_path.lower():
-                pass
-
     return False, ""
 
 
@@ -127,10 +120,7 @@ def main():
     is_blocked, message = validate_tool_use(tool_name, tool_input)
 
     if is_blocked:
-        print(json.dumps({
-            "decision": "block",
-            "reason": message
-        }))
+        print(json.dumps({"decision": "block", "reason": message}))
         sys.exit(2)
 
     sys.exit(0)

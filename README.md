@@ -54,8 +54,8 @@ Agents   = WHO does the work (technology expertise)
 **v4.1 Key Changes:**
 - **No orchestrator** - Claude Code handles routing natively
 - **Consolidated experts** - 7 focused experts (down from 17)
-- **Memory system** - Cross-session persistence
-- **Python hooks** - Zero-dependency automation
+- **Memory system** - Cross-session persistence with co-modification tracking
+- **Python hooks** - Zero-dependency automation with automatic cleanup
 
 ---
 
@@ -238,16 +238,18 @@ Cross-session persistence in `.claude/memory/`:
 
 ```
 memory/
-├── learnings.json    # Lessons learned (patterns, gotchas)
-├── decisions.json    # Architectural decisions
-└── preferences.json  # User preferences
+├── learnings.json         # Lessons learned (patterns, gotchas)
+├── decisions.json         # Architectural decisions
+├── preferences.json       # User preferences
+└── co-modifications.json  # File pairs frequently edited together
 ```
 
 ### How It Works
 
-1. **SessionStart** - Hook loads recent learnings into context
+1. **SessionStart** - Hook loads recent learnings + cleans old caches
 2. **During Session** - Use `/remember` to save learnings
 3. **Stop** - Hook persists new learnings to storage
+4. **Stop** - Hook tracks files frequently edited together
 
 ### Usage
 
@@ -280,9 +282,10 @@ Python-based automation hooks in `.claude/hooks/`:
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `session-init.sh` | SessionStart | Load context, git status |
+| `session-init.sh` | SessionStart | Load context, clean old caches (7d tsc-cache, 30d audit logs) |
 | `safety-validator.py` | PreToolUse | Block dangerous commands |
 | `memory-writer.py` | Stop | Persist learnings |
+| `co-modification-tracker.py` | Stop | Track files frequently edited together |
 
 ### Safety Validator
 
@@ -461,6 +464,6 @@ Copyright (c) 2025-2026 Tomasz Bartel
 ---
 
 **Status:** Production Ready
-**Version:** 4.1.0
+**Version:** 4.1.1
 **Based on:** Anthropic Context Engineering Best Practices (2025-2026)
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-02
