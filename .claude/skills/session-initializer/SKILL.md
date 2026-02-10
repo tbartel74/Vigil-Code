@@ -66,10 +66,10 @@ Or with active workflow:
 ```
 Session initialized.
 
-Git: feature/add-llm-guard (+2 -1)
+Git: feature/add-new-module (+2 -1)
 Memory: 3 learnings loaded
-Workflow: "Add LLM Guard" - Step 2/4 (in_progress)
-  Last: nats-expert configured stream
+Workflow: "Add New Module" - Step 2/4 (in_progress)
+  Last: security-expert ran audit
 
 Continue workflow or start fresh?
 ```
@@ -87,4 +87,3 @@ Continue workflow or start fresh?
 This skill is designed to work with:
 - `.claude/memory/` - Cross-session persistence
 - `.claude/state/progress.json` - Workflow state (v4.0 schema)
-- `.claude/core/protocols.md` - Error handling and code quality

@@ -50,8 +50,8 @@ Cross-session memory persistence with automatic cleanup.
 
 Use `/remember` command during session:
 ```
-/remember learning Always use parameterized queries for ClickHouse
-/remember decision Use NATS request-reply for Python services --rationale Lower latency
+/remember learning Always use parameterized queries for the database
+/remember decision Use request-reply for service calls --rationale Lower latency
 /remember preference commit_style conventional
 ```
 

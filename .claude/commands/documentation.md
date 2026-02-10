@@ -26,7 +26,7 @@ Generate professional README for project or specific service.
 
 Examples:
 - `/documentation readme` - Generate for root project
-- `/documentation readme services/detection-worker` - Generate for service
+- `/documentation readme services/my-worker` - Generate for service
 
 ### Generate API Documentation
 ```
@@ -53,9 +53,9 @@ Validate and synchronize documentation with code changes.
 
 ## Example Tasks
 
-- "Generate README for detection-worker service"
+- "Generate README for my-worker service"
 - "Create API documentation from Express routes"
-- "Generate user guide for PII configuration"
+- "Generate user guide for configuration"
 - "Update changelog with recent commits"
 - "Audit documentation for outdated content"
 - "Sync all version references to 1.0.0"
@@ -78,9 +78,6 @@ graph LR
 ## Integration
 
 Documentation skills automatically integrate with:
-- **express-api-developer** - Extract API endpoints
-- **nats-messaging** - Document NATS subjects
-- **docker-expert** - Document container setup
 - **git-commit-helper** - Generate changelogs
 
 ## Hook Integration

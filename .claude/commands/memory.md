@@ -40,8 +40,8 @@ Access cross-session memory with progressive disclosure.
 /memory show D0
 → Shows full details for decision #0
 
-/memory search NATS
-→ Searches for "NATS" in lessons and decisions
+/memory search "rate limiting"
+→ Searches for "rate limiting" in lessons and decisions
 
 /memory comods
 → Shows file pairs frequently edited together
@@ -67,7 +67,7 @@ python3 .claude/lib/memory-loader.py --layer=details --id=5
 python3 .claude/lib/memory-loader.py --layer=details --id=D0
 
 # Search
-python3 .claude/lib/memory-loader.py --search="NATS"
+python3 .claude/lib/memory-loader.py --search="rate limiting"
 
 # Co-modifications
 python3 .claude/lib/memory-loader.py --layer=comods

@@ -29,14 +29,11 @@ API Layer:
     - Config management, RBAC
 
 Workers (internal):
-  detection-worker  → Pattern matching (ReDoS risk)
-  semantic-worker   → Embedding analysis (resource exhaustion)
-  pii-worker        → PII coordination (data leakage)
-  arbiter-worker    → Decision fusion (threshold manipulation)
-  logging-worker    → Database ingestion (SQL injection)
-
-Support Services (internal):
-  presidio-api (5001), language-detector (5002)
+  worker-a  → Processing (ReDoS risk)
+  worker-b  → Analysis (resource exhaustion)
+  worker-c  → Coordination (data leakage)
+  worker-d  → Decision logic (threshold manipulation)
+  worker-e  → Database ingestion (SQL injection)
 ```
 
 ## OWASP Top 10 Coverage
@@ -107,21 +104,21 @@ app.use(helmet.contentSecurityPolicy({
 ## Worker Security Considerations
 
 ```yaml
-detection-worker:
+pattern-worker:
   Risks: ReDoS in patterns, config manipulation
-  Mitigations: Pattern timeout (1000ms), Zod validation, read-only config
+  Mitigations: Pattern timeout (1000ms), schema validation, read-only config
 
-semantic-worker:
+analysis-worker:
   Risks: Resource exhaustion, model poisoning
   Mitigations: Input length limits, fixed model, request timeout (2000ms)
 
-arbiter-worker:
+decision-worker:
   Risks: Threshold manipulation, decision bypass
   Mitigations: Hardcoded thresholds (not from input), fail-safe to BLOCK
 
-pii-worker:
-  Risks: PII data leakage in logs, detection bypass
-  Mitigations: Never log detected PII, dual-language validation
+data-worker:
+  Risks: Sensitive data leakage in logs, detection bypass
+  Mitigations: Never log sensitive data, input validation
 ```
 
 ## Common Procedures

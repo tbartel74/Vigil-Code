@@ -23,9 +23,9 @@ Save learnings, decisions, or preferences to cross-session memory.
 ## Examples
 
 ```
-/remember learning Always use parameterized queries for ClickHouse
-/remember learning NATS consumers need explicit ack --category nats
-/remember decision Use request-reply for sync Python calls --rationale Lower latency than HTTP
+/remember learning Always use parameterized queries for the database
+/remember learning Redis consumers need explicit ack --category infrastructure
+/remember decision Use request-reply for sync service calls --rationale Lower latency than HTTP
 /remember preference commit_style conventional
 ```
 
@@ -38,13 +38,13 @@ When user invokes `/remember`, run the appropriate command:
 python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "Always use parameterized queries"
 
 # Learning with category
-python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "NATS consumers need explicit ack" --category nats
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "Consumers need explicit ack" --category infrastructure
 
 # Learning with context
 python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "Check for nil before access" --context "Discovered during worker debugging" --category golang
 
 # Decision with rationale
-python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py decision "Use NATS request-reply for Python" --rationale "Lower latency than HTTP, built-in timeout"
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py decision "Use request-reply for service calls" --rationale "Lower latency than HTTP, built-in timeout"
 
 # Preference
 python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py preference commit_style "conventional"
@@ -57,7 +57,7 @@ Common categories for learnings:
 - `security`
 - `performance`
 - `architecture`
-- `nats`
+- `infrastructure`
 - `docker`
 - `testing`
 - `documentation`

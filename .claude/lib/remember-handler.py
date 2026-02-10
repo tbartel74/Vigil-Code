@@ -7,9 +7,9 @@ At session end, memory-writer.py persists these to permanent memory.
 
 Usage:
     python3 remember-handler.py learning "Always use parameterized queries"
-    python3 remember-handler.py learning "Always use parameterized queries" --context "Discovered during ClickHouse work"
+    python3 remember-handler.py learning "Always use parameterized queries" --context "Discovered during database work"
     python3 remember-handler.py learning "Always use parameterized queries" --category security
-    python3 remember-handler.py decision "Use NATS request-reply for Python" --rationale "Lower latency than HTTP"
+    python3 remember-handler.py decision "Use request-reply for service calls" --rationale "Lower latency than HTTP"
     python3 remember-handler.py preference commit_style "conventional"
 """
 

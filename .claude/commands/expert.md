@@ -13,26 +13,23 @@ Route task to technology expert using the Task tool.
 
 Claude analyzes your task and uses the Task tool with appropriate expert `subagent_type`.
 
-## Available Experts (7)
+## Available Experts (2 examples)
 
 | Expert | Model | Keywords |
 |--------|-------|----------|
-| `nats-expert` | opus | nats, jetstream, stream, consumer |
 | `security-expert` | opus | security, OWASP, XSS, audit |
-| `express-expert` | sonnet | express, api, endpoint, route, redis, cache |
 | `testing-expert` | sonnet | test, vitest, TDD, fixture |
-| `docker-expert` | sonnet | docker, container, compose, kubernetes, k8s |
-| `clickhouse-expert` | sonnet | clickhouse, SQL, analytics |
-| `python-expert` | sonnet | python, flask, fastapi, presidio, PII |
+
+Add your own experts in `.claude/agents/` for other technologies.
 
 ## Examples
 
 ```
-/expert How do I configure NATS JetStream?
-→ Uses Task tool with subagent_type="nats-expert"
+/expert Run a security audit on the auth module
+→ Uses Task tool with subagent_type="security-expert"
 
-/expert [docker] Why is port 5678 not accessible?
-→ Routes directly to docker-expert
+/expert [testing] Create test for SQL injection detection
+→ Routes directly to testing-expert
 ```
 
 ## When NOT to Use

@@ -135,7 +135,7 @@ Move a completed task from `dev_docs/active/` to `dev_docs/archive/`.
 /docs update
 
 # Update with specific focus
-/docs update "focus on NATS integration progress"
+/docs update "focus on API integration progress"
 
 # Archive completed task
 /docs archive 0001
