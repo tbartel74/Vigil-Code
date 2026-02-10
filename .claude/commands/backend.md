@@ -1,18 +1,18 @@
 ---
 name: backend
-description: Express.js API, JWT authentication, and ClickHouse database operations (project)
+description: Express.js API, authentication, and database operations (project)
 ---
 
-# Backend API Agent
+# Backend API Command
 
-Manage Express.js API endpoints, NATS integration, authentication, and database operations for Vigil Guard Enterprise.
+Manage Express.js API endpoints, authentication, and database operations.
 
 ## Capabilities
 
 - Create/modify REST API endpoints (apps/api/)
-- NATS JetStream request publishing
+- Message queue request publishing
 - API key authentication with HMAC hashing
-- ClickHouse analytics queries (vigil.detection_events)
+- Analytics database queries
 - Rate limiting with Redis
 - CORS and security headers
 - Tenant isolation
@@ -23,30 +23,30 @@ Manage Express.js API endpoints, NATS integration, authentication, and database 
 Client Request
     |
     v
-[vigil-api] (:8787)
+[your-api] (:8787)
     |
-    +---> NATS JetStream (publish)
-    |     Subject: vigil.requests.analyze
+    +---> Message Queue (publish)
+    |     Subject: app.requests.analyze
     |
     +---> Wait for response
-          Subject: vigil.responses.<request_id>
+          Subject: app.responses.<request_id>
 ```
 
 ## Key Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /v1/analyze | Analyze text for threats |
+| POST | /v1/analyze | Analyze text |
 | POST | /v1/analyze/batch | Batch analysis (max 10) |
 | GET | /v1/usage | Usage statistics |
 | GET | /health | Basic liveness |
-| GET | /health/ready | Readiness (NATS, ClickHouse) |
+| GET | /health/ready | Readiness check |
 
 ## Example Tasks
 
-"Create /v1/analyze endpoint with NATS integration"
+"Create /v1/analyze endpoint with messaging integration"
 "Implement API key authentication middleware"
-"Optimize ClickHouse query for tenant usage stats"
+"Optimize database query for tenant usage stats"
 "Setup Redis-backed rate limiting for analyze endpoint"
 "Add tenant isolation to analytics queries"
 
@@ -55,18 +55,9 @@ Client Request
 - API source: `apps/api/src/`
 - Routes: `apps/api/src/routes/`
 - Middleware: `apps/api/src/middleware/`
-- NATS client: `apps/api/src/services/nats.ts`
-- ClickHouse client: `apps/api/src/services/clickhouse.ts`
+- Services: `apps/api/src/services/`
 
-## Related Skills
-
-- express-api-developer - Full API development guidance
-- nats-messaging - NATS JetStream integration
-
-## Related Agents
+## Related
 
 - **frontend** - API integration
-- **analytics** - Database queries
 - **security** - Security audits
-
-Ready to work on backend!

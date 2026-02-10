@@ -96,12 +96,30 @@ def get_edited_files(session_id: str) -> list[str]:
             line = line.strip()
             if not line:
                 continue
-            parts = line.split(":", 1)
-            if len(parts) >= 2:
-                file_path = parts[1]
-                if ":" in file_path:
-                    file_path = ":".join(line.split(":")[1:])
-                files.add(file_path)
+
+            # JSON Lines format: {"ts": "...", "file": "path/to/file.ts"}
+            if line.startswith("{"):
+                try:
+                    entry = json.loads(line)
+                    filepath = entry.get("file", "")
+                    if filepath:
+                        files.add(filepath)
+                    continue
+                except json.JSONDecodeError:
+                    pass
+
+            # Legacy format: 2026-02-01T17:10:16+00:00:filepath
+            idx = line.rfind("+00:00:")
+            if idx != -1:
+                filepath = line[idx + 7 :]
+            else:
+                idx = line.find(":", 25)
+                if idx != -1:
+                    filepath = line[idx + 1 :]
+                else:
+                    continue
+            if filepath:
+                files.add(filepath)
 
     return list(files)
 

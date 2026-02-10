@@ -20,66 +20,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+# Customize for your project's monorepo structure.
+# Each entry maps a directory pattern to its TypeScript check command.
 REPO_MAPPINGS = [
+    {
+        "pattern": r"^src/",
+        "repo": "src",
+        "tsc_command": "npx tsc --noEmit",
+    },
     {
         "pattern": r"^apps/api/",
         "repo": "apps/api",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/api typecheck",
-    },
-    {
-        "pattern": r"^apps/web-ui/frontend/",
-        "repo": "apps/web-ui/frontend",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/web-ui-frontend typecheck",
-    },
-    {
-        "pattern": r"^apps/web-ui/backend/",
-        "repo": "apps/web-ui/backend",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/web-ui-backend typecheck",
-    },
-    {
-        "pattern": r"^services/detection-worker/",
-        "repo": "services/detection-worker",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/detection-worker typecheck",
-    },
-    {
-        "pattern": r"^services/semantic-worker/",
-        "repo": "services/semantic-worker",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/semantic-worker typecheck",
-    },
-    {
-        "pattern": r"^services/pii-worker/",
-        "repo": "services/pii-worker",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/pii-worker typecheck",
-    },
-    {
-        "pattern": r"^services/arbiter-worker/",
-        "repo": "services/arbiter-worker",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/arbiter-worker typecheck",
-    },
-    {
-        "pattern": r"^services/logging-worker/",
-        "repo": "services/logging-worker",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/logging-worker typecheck",
-    },
-    {
-        "pattern": r"^services/llm-guard-worker/",
-        "repo": "services/llm-guard-worker",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/llm-guard-worker typecheck",
+        "tsc_command": "pnpm --filter api typecheck",
     },
     {
         "pattern": r"^packages/shared/",
         "repo": "packages/shared",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/shared typecheck",
-    },
-    {
-        "pattern": r"^packages/nats-client/",
-        "repo": "packages/nats-client",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/nats-client typecheck",
-    },
-    {
-        "pattern": r"^packages/observability/",
-        "repo": "packages/observability",
-        "tsc_command": "pnpm --filter @vigil-guard-enterprise/observability typecheck",
+        "tsc_command": "pnpm --filter shared typecheck",
     },
 ]
 
@@ -142,7 +99,9 @@ def track_file(session_id: str, file_path: str) -> None:
     affected_repos_file = cache_dir / "affected-repos.txt"
     commands_file = cache_dir / "commands.txt"
 
-    append_to_file(edited_files_log, f"{timestamp}:{relative_path}")
+    # JSON Lines format for robust parsing
+    entry = json.dumps({"ts": timestamp, "file": relative_path})
+    append_to_file(edited_files_log, entry)
 
     repo_mapping = find_repo(relative_path)
     if repo_mapping:

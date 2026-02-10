@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PreToolUse hook for Vigil Guard Enterprise.
+PreToolUse safety gate.
 Blocks destructive commands and protects sensitive files.
 
 Exit codes:
@@ -38,6 +38,11 @@ DANGEROUS_BASH_PATTERNS = [
     r"git\s+push\s+.*--force.*main",
     r"git\s+push\s+.*--force.*master",
     r"git\s+reset\s+--hard\s+HEAD~",
+    r"rm\s+-rf\s+\.\s*$",
+    r"rm\s+-rf\s+\./",
+    r"curl\s+.*\|\s*(?:ba)?sh",
+    r"wget\s+.*\|\s*(?:ba)?sh",
+    r"git\s+clean\s+-[a-z]*f",
 ]
 
 PROTECTED_FILE_PATTERNS = [
@@ -56,13 +61,11 @@ PROTECTED_FILE_PATTERNS = [
     r"secrets\.json",
     r"\.aws/credentials",
     r"\.kube/config",
-    r"JWT_SECRET",
-    r"API_KEY_SALT",
-    r"CLICKHOUSE_PASSWORD",
 ]
 
 PROTECTED_PATHS = [
     "infra/secrets/",
+    "data/secrets/",
     ".claude/audit_logs/",
     "~/.ssh/",
     "~/.aws/",

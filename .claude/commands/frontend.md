@@ -5,7 +5,7 @@ description: React 18 + Vite + Tailwind CSS v4 frontend development (project)
 
 # Frontend UI Agent
 
-Build and optimize React components with Tailwind CSS for Vigil Guard Enterprise.
+Build and optimize React components with Tailwind CSS for your project.
 
 ## Capabilities
 

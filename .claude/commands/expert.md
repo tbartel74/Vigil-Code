@@ -13,19 +13,17 @@ Route task to technology expert using the Task tool.
 
 Claude analyzes your task and uses the Task tool with appropriate expert `subagent_type`.
 
-## Available Experts (9)
+## Available Experts (7)
 
 | Expert | Model | Keywords |
 |--------|-------|----------|
 | `nats-expert` | opus | nats, jetstream, stream, consumer |
 | `security-expert` | opus | security, OWASP, XSS, audit |
 | `express-expert` | sonnet | express, api, endpoint, route, redis, cache |
-| `vitest-expert` | sonnet | test, vitest, TDD, fixture |
-| `react-expert` | sonnet | react, component, hook, vite, tailwind |
+| `testing-expert` | sonnet | test, vitest, TDD, fixture |
 | `docker-expert` | sonnet | docker, container, compose, kubernetes, k8s |
-| `presidio-expert` | sonnet | presidio, PII, PESEL, NIP |
 | `clickhouse-expert` | sonnet | clickhouse, SQL, analytics |
-| `python-expert` | sonnet | python, flask, fastapi |
+| `python-expert` | sonnet | python, flask, fastapi, presidio, PII |
 
 ## Examples
 

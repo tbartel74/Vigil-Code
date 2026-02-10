@@ -1,4 +1,4 @@
-# Claude Code Hooks for Vigil Guard Enterprise
+# Claude Code Hooks
 
 This directory contains automation hooks that integrate with Claude Code CLI.
 
@@ -19,6 +19,7 @@ This directory contains automation hooks that integrate with Claude Code CLI.
 | `tsc-check.sh` | Stop | TypeScript build check on modified repos | ✅ Active |
 | `self-check-reminder.sh` | Stop | Analyzes edited files for risky patterns | ✅ Active |
 | `notification-sound.sh` | Stop | Plays notification sound on completion | ✅ Active |
+| `pre-compact-flush.sh` | PreCompact | Flushes pending session learnings before context compression | ✅ Active |
 
 ---
 
@@ -28,10 +29,11 @@ Cross-session memory persistence with automatic cleanup.
 
 ### Flow
 
-1. **SessionStart** - `session-init.sh` loads learnings from `.claude/memory/`
+1. **SessionStart** - `session-init.sh` loads learnings, cleans old daily logs, checks curation needs
 2. **During Session** - User runs `/remember` to save learnings to session file
-3. **Stop** - `memory-writer.py` persists session learnings to permanent storage
-4. **Stop** - `co-modification-tracker.py` tracks file pairs edited together
+3. **PreCompact** - `pre-compact-flush.sh` flushes pending learnings before context compression
+4. **Stop** - `memory-writer.py` persists session learnings to permanent storage + daily logs
+5. **Stop** - `co-modification-tracker.py` tracks file pairs edited together
 
 ### Files
 
@@ -41,6 +43,7 @@ Cross-session memory persistence with automatic cleanup.
 | `.claude/memory/decisions.json` | Architectural decisions | Max 50, FIFO |
 | `.claude/memory/preferences.json` | User preferences | Key-based overwrite |
 | `.claude/memory/co-modifications.json` | File pairs edited together | Max 50, frequency-based |
+| `.claude/memory/YYYY-MM-DD.md` | Daily episodic logs (append-only) | Auto-delete after 90 days |
 | `.claude/state/session-learnings.json` | Temporary session storage | Cleared on Stop |
 
 ### Usage
@@ -77,11 +80,17 @@ Use `/remember` command during session:
 
 Initializes session context and loads cross-session memory.
 
+### pre-compact-flush.sh
+
+**Event:** PreCompact
+
+Hybrid pre-compaction flush: (1) deterministic flush of pending `session-learnings.json` via `memory-writer.py`, then (2) prompt asking Claude to save any unsaved knowledge to `.claude/state/pre-compact-notes.md`.
+
 ### memory-writer.py
 
 **Event:** Stop
 
-Persists session learnings to permanent memory at session end.
+Persists session learnings to permanent memory and daily episodic logs at session end.
 
 ### safety-validator.py
 

@@ -5,7 +5,11 @@ Save learnings, decisions, or preferences to cross-session memory.
 ## Usage
 
 ```
-/remember <type> <content>
+/remember learning <content>
+/remember learning <content> --category <category>
+/remember decision <content>
+/remember decision <content> --rationale <why>
+/remember preference <key> <value>
 ```
 
 ## Types
@@ -19,28 +23,50 @@ Save learnings, decisions, or preferences to cross-session memory.
 ## Examples
 
 ```
-/remember learning Always use parameterized queries for ClickHouse to avoid SQL injection
-
-/remember decision Use NATS request-reply for synchronous Python service communication instead of HTTP
-
-/remember preference Prefer concise responses without emojis
+/remember learning Always use parameterized queries for ClickHouse
+/remember learning NATS consumers need explicit ack --category nats
+/remember decision Use request-reply for sync Python calls --rationale Lower latency than HTTP
+/remember preference commit_style conventional
 ```
-
-## How It Works
-
-1. Claude writes to `.claude/state/session-learnings.json` during session
-2. At session end, `memory-writer.py` hook persists to permanent memory
-3. At next session start, `session-init.sh` loads memories into context
 
 ## Implementation
 
-When user invokes `/remember`, Claude should:
+When user invokes `/remember`, run the appropriate command:
 
-1. Parse the type and content from the command
-2. Read current session learnings from `.claude/state/session-learnings.json`
-3. Append new entry with timestamp and session ID
-4. Write back to session learnings file
-5. Confirm to user what was remembered
+```bash
+# Learning (basic)
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "Always use parameterized queries"
+
+# Learning with category
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "NATS consumers need explicit ack" --category nats
+
+# Learning with context
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py learning "Check for nil before access" --context "Discovered during worker debugging" --category golang
+
+# Decision with rationale
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py decision "Use NATS request-reply for Python" --rationale "Lower latency than HTTP, built-in timeout"
+
+# Preference
+python3 $CLAUDE_PROJECT_DIR/.claude/lib/remember-handler.py preference commit_style "conventional"
+```
+
+## Categories
+
+Common categories for learnings:
+- `general` (default)
+- `security`
+- `performance`
+- `architecture`
+- `nats`
+- `docker`
+- `testing`
+- `documentation`
+
+## Memory Lifecycle
+
+1. User invokes `/remember` → `remember-handler.py` writes to `session-learnings.json`
+2. Session ends → `memory-writer.py` hook persists to permanent `learnings.json`
+3. Next session starts → `session-init.sh` loads summary into context
 
 ## Memory Limits
 
@@ -50,6 +76,7 @@ When user invokes `/remember`, Claude should:
 
 ## Related
 
-- Session init: `.claude/hooks/session-init.sh`
-- Memory writer: `.claude/hooks/memory-writer.py`
+- Memory access: `/memory` command
+- Handler: `.claude/lib/remember-handler.py`
+- Writer hook: `.claude/hooks/memory-writer.py`
 - Memory files: `.claude/memory/`

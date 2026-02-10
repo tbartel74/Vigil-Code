@@ -100,7 +100,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use-tracker.sh"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use-tracker.py"
           }
         ]
       },
@@ -158,7 +158,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/self-check-reminder.sh"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/self-check-reminder.py"
           }
         ]
       },
@@ -177,6 +177,17 @@
           {
             "type": "command",
             "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/audit-logger.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "_description": "Memory flush: persists pending session learnings before context compression",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-flush.sh"
           }
         ]
       }

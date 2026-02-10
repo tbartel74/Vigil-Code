@@ -1,16 +1,11 @@
 ---
 name: documentation-specialist
-description: |
-  Complete documentation management for Vigil Guard Enterprise.
-  README generation, API docs, documentation sync, user guides, changelogs.
-  Consolidates: readme-generator, api-doc-generator, doc-generator, documentation-sync-specialist.
-version: 1.0.0
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task]
+description: Complete documentation management for enterprise projects. README generation, API docs, documentation sync, user guides, changelogs.
 ---
 
 # Documentation Specialist
 
-Complete documentation management for Vigil Guard Enterprise. Handles README generation, API documentation, sync, user guides, and changelogs.
+Complete documentation management for enterprise projects. Handles README generation, API documentation, sync, user guides, and changelogs.
 
 ## When to Use This Skill
 
@@ -30,8 +25,6 @@ docs/
 ├── USER_GUIDE.md              # Complete user manual
 ├── API.md                     # REST API reference
 ├── ARCHITECTURE.md            # System architecture
-├── DETECTION_PATTERNS.md      # Pattern configuration
-├── PII_DETECTION.md           # PII detection guide
 ├── CONFIGURATION.md           # Environment variables
 ├── AUTHENTICATION.md          # Auth & RBAC guide
 ├── DOCKER.md                  # Container setup
@@ -58,16 +51,16 @@ scan_for:
   - tsconfig.json, Dockerfile, .env.example
 ```
 
-### Service README Template (Vigil Guard)
+### Service README Template
 ```markdown
 # {Service Name}
 
-{Description of service role in detection pipeline}
+{Description of service role in the pipeline}
 
 ## Architecture Role
 
 \`\`\`
-[Previous Service] → NATS → [{Service Name}] → NATS → [Next Service]
+[Previous Service] -> [{Service Name}] -> [Next Service]
 \`\`\`
 
 ## Configuration
@@ -75,12 +68,7 @@ scan_for:
 ### Environment Variables
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| NATS_URL | Yes | - | NATS server URL |
-
-### NATS Streams
-| Stream | Subject | Purpose |
-|--------|---------|---------|
-| DETECTION_REQUESTS | vigil.detect.* | Input messages |
+| DATABASE_URL | Yes | - | Database connection URL |
 
 ## Development
 \`\`\`bash
@@ -95,7 +83,7 @@ pnpm test   # Run tests
 "Generate a README for this project"
 
 # Generate for specific service
-"Create README for services/detection-worker"
+"Create README for services/my-worker"
 
 # Update existing README
 "Update the README with new API endpoints"
@@ -110,7 +98,7 @@ pnpm test   # Run tests
 // Scan locations
 glob_patterns:
   - "apps/api/src/routes/**/*.ts"
-  - "apps/web-ui/backend/src/routes/**/*.ts"
+  - "src/routes/**/*.ts"
 
 // Parse patterns
 patterns:
@@ -132,18 +120,17 @@ Authorization: Bearer <API_KEY>
 
 ---
 
-## Detection API
+## Endpoints
 
-### POST /v1/guard/input
+### POST /v1/analyze
 
-Analyze input text for prompt injection threats.
+Analyze input text.
 
 **Request:**
 \`\`\`json
 {
   "text": "string",
-  "mode": "fast|full",
-  "session_id": "string"
+  "mode": "fast|full"
 }
 \`\`\`
 
@@ -151,7 +138,7 @@ Analyze input text for prompt injection threats.
 \`\`\`json
 {
   "request_id": "uuid",
-  "decision": "ALLOW|SANITIZE_LIGHT|SANITIZE_HEAVY|BLOCK",
+  "decision": "ALLOW|BLOCK",
   "score": 25,
   "duration_ms": 150
 }
@@ -169,10 +156,10 @@ Analyze input text for prompt injection threats.
 ```yaml
 openapi: 3.0.3
 info:
-  title: Vigil Guard API
+  title: Your API
   version: 1.0.0
 paths:
-  /v1/guard/input:
+  /v1/analyze:
     post:
       summary: Analyze input text
       security:
@@ -182,25 +169,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GuardInputRequest'
-```
-
-### NATS Endpoints Documentation
-```markdown
-## NATS Endpoints
-
-### vigil.pii.analyze
-**Subject:** \`vigil.pii.analyze\`
-**Timeout:** 30s
-
-**Request:**
-\`\`\`json
-{
-  "text": "string",
-  "language": "en|pl",
-  "entities": ["PERSON", "EMAIL", "PESEL"]
-}
-\`\`\`
+              $ref: '#/components/schemas/AnalyzeRequest'
 ```
 
 ---
@@ -310,15 +279,6 @@ actions:
   5. Commit: "docs: prepare for release"
 ```
 
-### Pattern Added (NATS KV)
-```yaml
-trigger: New detection pattern
-actions:
-  1. Update DETECTION_PATTERNS.md
-  2. Update CONFIGURATION.md
-  3. Add pattern to category docs
-```
-
 ---
 
 ## Quick Reference
@@ -328,8 +288,8 @@ actions:
 "Generate complete documentation"
 
 # Specific types
-"Generate user guide for detection configuration"
-"Create technical documentation for NATS workers"
+"Generate user guide for configuration"
+"Create technical documentation for workers"
 "Generate changelog for last sprint"
 "Create contributing guide"
 

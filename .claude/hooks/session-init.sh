@@ -15,10 +15,10 @@ if [ -d "$TSC_CACHE_DIR" ]; then
   find "$TSC_CACHE_DIR" -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
 fi
 
-# Cleanup old audit logs (older than 30 days)
+# Cleanup old audit logs (older than 90 days, aligned with audit-logger.py RETENTION_DAYS)
 AUDIT_LOG_DIR="$CLAUDE_PROJECT_DIR/.claude/audit_logs"
 if [ -d "$AUDIT_LOG_DIR" ]; then
-  find "$AUDIT_LOG_DIR" -maxdepth 1 -name "*.jsonl" -type f -mtime +30 -delete 2>/dev/null || true
+  find "$AUDIT_LOG_DIR" -maxdepth 1 -name "*.jsonl" -type f -mtime +90 -delete 2>/dev/null || true
 fi
 
 # Initialize session context file
@@ -69,8 +69,30 @@ elif [ "$LEARNINGS_COUNT" -gt 0 ] || [ "$DECISIONS_COUNT" -gt 0 ]; then
   echo "## Cross-Session Memory Loaded"
   echo ""
   echo "**Learnings:** $LEARNINGS_COUNT | **Decisions:** $DECISIONS_COUNT"
+  echo "Categories: $(python3 -c "
+import json
+d=json.load(open('$MEMORY_DIR/learnings.json'))
+cats={}
+for e in d.get('entries',[]):
+    c=e.get('category','general')
+    cats[c]=cats.get(c,0)+1
+print(', '.join(f'{k}: {v}' for k,v in sorted(cats.items(),key=lambda x:-x[1])))
+" 2>/dev/null || echo "n/a")"
+  echo "Co-modifications: $(python3 -c "import json; d=json.load(open('$MEMORY_DIR/co-modifications.json')); print(len(d.get('pairs',[])))" 2>/dev/null || echo "0") file pairs tracked"
   echo ""
-  echo "Use \`/remember\` to save new learnings during this session."
+  echo "Auto-save is active. Save learnings/decisions proactively via remember-handler (see MEMORY.md)."
+fi
+
+# Cleanup old daily memory logs (older than 90 days - safety net for unbounded growth)
+find "$MEMORY_DIR" -maxdepth 1 -name "20??-??-??.md" -type f -mtime +90 -delete 2>/dev/null || true
+
+# Check if daily logs need curation into project MEMORY.md
+DAILY_LOG_COUNT=$(find "$MEMORY_DIR" -maxdepth 1 -name "20??-??-??.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+if [ "$DAILY_LOG_COUNT" -ge 5 ]; then
+  echo ""
+  echo "---"
+  echo "**Memory curation needed:** $DAILY_LOG_COUNT daily logs accumulated in \`.claude/memory/\`."
+  echo "Review them and distill key insights into the project-level MEMORY.md, then delete processed logs."
 fi
 
 exit 0

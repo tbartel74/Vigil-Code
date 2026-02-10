@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Audit logging hook for Vigil Guard Enterprise.
+Audit logging hook.
 Logs all tool operations to .claude/audit_logs/ in JSONL format.
 
 Supports events: PreToolUse, PostToolUse, UserPromptSubmit, Stop

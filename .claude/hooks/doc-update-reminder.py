@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Documentation Update Reminder Hook for Vigil Guard Enterprise
+Documentation Update Reminder Hook
 
 PostToolUse hook that monitors file edits and suggests documentation updates
 when relevant code changes are detected.
@@ -20,8 +20,8 @@ from pathlib import Path
 DOC_TRIGGERS = {
     "api-doc-generator": {
         "path_patterns": [
-            "apps/api/src/routes/",
-            "apps/web-ui/backend/src/routes/",
+            "src/routes/",
+            "src/api/",
         ],
         "content_patterns": [
             "router.get",
@@ -30,7 +30,7 @@ DOC_TRIGGERS = {
             "router.delete",
             "router.patch",
         ],
-        "message": "API routes modified. Consider running api-doc-generator to update docs/API.md"
+        "message": "API routes modified. Consider running api-doc-generator to update docs/API.md",
     },
     "readme-generator": {
         "path_patterns": [
@@ -43,7 +43,7 @@ DOC_TRIGGERS = {
             "pyproject.toml",
             "Cargo.toml",
         ],
-        "message": "Package configuration changed. Consider running readme-generator to update README.md"
+        "message": "Package configuration changed. Consider running readme-generator to update README.md",
     },
     "doc-generator": {
         "path_patterns": [
@@ -51,12 +51,17 @@ DOC_TRIGGERS = {
             "docs/USER_GUIDE.md",
             "docs/ARCHITECTURE.md",
         ],
-        "message": "Documentation files detected. Consider running doc-generator for comprehensive updates"
-    }
+        "message": "Documentation files detected. Consider running doc-generator for comprehensive updates",
+    },
 }
 
 # Cooldown tracking (prevent spam)
-COOLDOWN_FILE = "/tmp/vigil-doc-reminder-cooldown.json"
+COOLDOWN_FILE = os.path.join(
+    os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()),
+    ".claude",
+    "state",
+    "doc-reminder-cooldown.json",
+)
 COOLDOWN_SECONDS = 300  # 5 minutes between reminders
 
 
@@ -83,6 +88,7 @@ def save_cooldown(state: dict) -> None:
 def check_cooldown(skill: str) -> bool:
     """Check if skill reminder is on cooldown."""
     import time
+
     state = load_cooldown()
     last_shown = state.get(skill, 0)
     return (time.time() - last_shown) < COOLDOWN_SECONDS
@@ -91,6 +97,7 @@ def check_cooldown(skill: str) -> bool:
 def update_cooldown(skill: str) -> None:
     """Update cooldown timestamp for skill."""
     import time
+
     state = load_cooldown()
     state[skill] = time.time()
     save_cooldown(state)
@@ -136,11 +143,9 @@ def analyze_edit(tool_input: dict, tool_result: dict) -> list:
                 matched = True
 
         if matched:
-            suggestions.append({
-                "skill": skill,
-                "message": config["message"],
-                "file": file_path
-            })
+            suggestions.append(
+                {"skill": skill, "message": config["message"], "file": file_path}
+            )
             update_cooldown(skill)
 
     return suggestions
@@ -156,7 +161,7 @@ def format_output(suggestions: list) -> str:
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         "📝 DOCUMENTATION UPDATE SUGGESTION",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        ""
+        "",
     ]
 
     for suggestion in suggestions:
@@ -203,7 +208,7 @@ def main():
 
         sys.exit(0)
 
-    except Exception as e:
+    except Exception:
         # Silent fail - don't block workflow
         sys.exit(0)
 
