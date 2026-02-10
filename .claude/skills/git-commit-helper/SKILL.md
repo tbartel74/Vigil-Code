@@ -104,7 +104,7 @@ worker:     Background workers (services/*)
 shared:     Shared types (packages/shared)
 
 # Infrastructure
-docker:     Container orchestration (infra/docker)
+infra:      Infrastructure (infra/)
 
 # Other
 auth:       Authentication/authorization
@@ -164,7 +164,7 @@ elif echo "$CHANGED_FILES" | grep -q "services/"; then
 elif echo "$CHANGED_FILES" | grep -q "packages/"; then
   SCOPE="shared"
 elif echo "$CHANGED_FILES" | grep -q "infra/"; then
-  SCOPE="docker"
+  SCOPE="infra"
 elif echo "$CHANGED_FILES" | grep -q "docs/"; then
   SCOPE="docs"
 elif echo "$CHANGED_FILES" | grep -qE "\.test\.(ts|js)$"; then

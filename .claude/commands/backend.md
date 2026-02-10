@@ -1,11 +1,11 @@
 ---
 name: backend
-description: Express.js API, authentication, and database operations (project)
+description: API development, authentication, and database operations (project)
 ---
 
 # Backend API Command
 
-Manage Express.js API endpoints, authentication, and database operations.
+Manage API endpoints, authentication, and database operations.
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Manage Express.js API endpoints, authentication, and database operations.
 - Message queue request publishing
 - API key authentication with HMAC hashing
 - Analytics database queries
-- Rate limiting with Redis
+- Rate limiting
 - CORS and security headers
 - Tenant isolation
 
@@ -47,7 +47,7 @@ Client Request
 "Create /v1/analyze endpoint with messaging integration"
 "Implement API key authentication middleware"
 "Optimize database query for tenant usage stats"
-"Setup Redis-backed rate limiting for analyze endpoint"
+"Setup rate limiting for analyze endpoint"
 "Add tenant isolation to analytics queries"
 
 ## Code Locations

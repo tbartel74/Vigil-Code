@@ -1,12 +1,12 @@
-# Vigil-Code: Technology Expert Agent System v4.1
+# Technology Expert Agent System v4.2
 
-**A production-ready technology expert agent framework for Claude Code. Build specialized AI assistants with domain knowledge, cross-session memory, and procedural skills.**
+**A production-ready technology expert agent framework for Claude Code (Opus 4.6). Build specialized AI assistants with domain knowledge, cross-session memory, and procedural skills.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blue.svg)](https://claude.ai/code)
-[![Experts: 7](https://img.shields.io/badge/Experts-7-green.svg)](#technology-experts)
-[![Skills: 6](https://img.shields.io/badge/Skills-6-orange.svg)](#skills)
-[![Version: 4.1](https://img.shields.io/badge/Version-4.1-brightgreen.svg)]()
+[![Experts: 2](https://img.shields.io/badge/Experts-2_examples-green.svg)](#technology-experts)
+[![Skills: 3](https://img.shields.io/badge/Skills-3-orange.svg)](#skills-system)
+[![Version: 4.2](https://img.shields.io/badge/Version-4.2-brightgreen.svg)]()
 
 ---
 
@@ -21,7 +21,6 @@
 7. [Hooks System](#hooks-system)
 8. [Creating Your Own Expert](#creating-your-own-expert)
 9. [Adapting to Your Project](#adapting-to-your-project)
-10. [Migration from v3.x](#migration-from-v3x)
 
 ---
 
@@ -30,14 +29,14 @@
 ### The Problem
 
 Claude Code is a powerful tool, but:
-- It doesn't know technology specifics (NATS, Presidio, ClickHouse)
+- It doesn't know your project's technology specifics
 - It doesn't remember context between sessions
 - It lacks structure for complex, multi-step tasks
 - It may guess instead of checking documentation
 
 ### The Solution
 
-Vigil-Code introduces a system of **technology experts** - specialized agents with:
+This template introduces a system of **technology experts** - specialized agents with:
 
 1. **Domain Knowledge** - each expert knows their technology deeply
 2. **Cross-Session Memory** - learnings, decisions, and preferences persist
@@ -51,11 +50,13 @@ Skills   = HOW to do things (procedures, workflows)
 Agents   = WHO does the work (technology expertise)
 ```
 
-**v4.1 Key Changes:**
+**v4.2 Key Changes:**
 - **No orchestrator** - Claude Code handles routing natively
-- **Consolidated experts** - 7 focused experts (down from 17)
+- **2 example experts** - Security + Testing as templates (add your own)
+- **3 procedural skills** - Session init, documentation, git commits
 - **Memory system** - Cross-session persistence with co-modification tracking
 - **Python hooks** - Zero-dependency automation with automatic cleanup
+- **Opus 4.6 alignment** - Simplified protocols, correct SDK format
 
 ---
 
@@ -80,12 +81,12 @@ cp CLAUDE.md /path/to/your/project/
 ```
 your-project/
 ├── .claude/
-│   ├── agents/           # 7 technology experts
-│   ├── skills/           # 6 procedural skills
+│   ├── agents/           # 2 example experts (add your own)
+│   ├── skills/           # 3 procedural skills
 │   ├── commands/         # Slash commands
 │   ├── hooks/            # Automation hooks
 │   ├── memory/           # Cross-session persistence
-│   ├── core/             # Protocols
+│   ├── lib/              # Shared libraries
 │   └── state/            # Session state (gitignore)
 ├── CLAUDE.md             # Your project instructions
 └── [rest of project]
@@ -94,11 +95,10 @@ your-project/
 ### First Use
 
 ```
-/expert How do I configure a NATS JetStream consumer?
+/expert How do I configure rate limiting?
 
-🤖 Invoking: nats-expert
-✅ Use jetstream.consumers.add() with ack_policy
-📚 Source: https://docs.nats.io/
+Invoking: security-expert
+Use a rate limiting middleware with sliding window...
 ```
 
 ---
@@ -107,24 +107,19 @@ your-project/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     TECHNOLOGY EXPERTS (7)                       │
+│                     TECHNOLOGY EXPERTS (2 examples)              │
 │                                                                  │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐   │
-│  │   NATS     │ │  Express   │ │  Testing   │ │   Docker   │   │
-│  │  Expert    │ │  Expert    │ │  Expert    │ │  Expert    │   │
-│  └────────────┘ └────────────┘ └────────────┘ └────────────┘   │
-│                                                                  │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐                   │
-│  │  Security  │ │ ClickHouse │ │   Python   │                   │
-│  │  Expert    │ │  Expert    │ │  Expert    │                   │
-│  └────────────┘ └────────────┘ └────────────┘                   │
+│  ┌────────────┐ ┌────────────┐                                  │
+│  │ Security   │ │ Testing    │   + add your own experts          │
+│  │            │ │            │                                    │
+│  └────────────┘ └────────────┘                                   │
 │                              │                                   │
 │                              ▼                                   │
 │              ┌───────────────────────────────┐                  │
 │              │     Context System            │                  │
 │              │  - memory/learnings.json      │                  │
 │              │  - memory/decisions.json      │                  │
-│              │  - core/protocols.md          │                  │
+│              │  - memory/preferences.json    │                  │
 │              └───────────────────────────────┘                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -135,10 +130,9 @@ your-project/
 |-----------|----------|-------------|
 | **Agents** | `.claude/agents/*/AGENT.md` | Technology experts with domain knowledge |
 | **Skills** | `.claude/skills/*/SKILL.md` | Procedural workflows and procedures |
-| **Commands** | `.claude/commands/*.md` | Slash commands (`/expert`, `/deploy`) |
+| **Commands** | `.claude/commands/*.md` | Slash commands (`/expert`, `/test`) |
 | **Hooks** | `.claude/hooks/` | Automation (session init, safety guards) |
 | **Memory** | `.claude/memory/` | Cross-session persistence |
-| **Protocols** | `.claude/core/protocols.md` | Shared protocols |
 
 ---
 
@@ -146,38 +140,37 @@ your-project/
 
 Each expert is a `.claude/agents/[name]/AGENT.md` file with YAML frontmatter + Markdown content.
 
+### Included Examples (2)
+
 | Expert | Primary Focus | Use For |
 |--------|---------------|---------|
-| `nats-expert` | NATS JetStream | Streams, consumers, KV store, messaging patterns |
 | `security-expert` | Application Security | OWASP, vulnerabilities, audits, auth |
-| `express-expert` | Express.js | REST APIs, middleware, JWT auth, rate limiting |
 | `testing-expert` | Testing | Vitest, TDD workflow, fixtures, mocking, E2E |
-| `clickhouse-expert` | ClickHouse | Analytics SQL, schema design, TTL, performance |
-| `docker-expert` | Docker | Containers, compose, networking, stack.sh |
-| `python-expert` | Python | Flask, FastAPI, Presidio PII, language detection |
+
+These are provided as **templates**. Add your own experts for any technology your project uses (e.g., database, messaging, DevOps, frontend frameworks).
 
 ### Usage
 
 **Single Expert:**
 ```
-/expert How do I create a ClickHouse materialized view?
-→ clickhouse-expert responds
+/expert How do I configure rate limiting?
+→ security-expert responds
 ```
 
 **Force Specific Expert:**
 ```
-/expert [docker] Why is port 5678 not accessible?
 /expert [security] Review this authentication flow
+/expert [testing] Create test for input validation
 ```
 
 ### Expert Anatomy
 
 ```yaml
 ---
-name: nats-expert
+name: your-expert
 description: |
-  NATS and JetStream messaging expert.
-  Deep knowledge of streams, consumers, workers, request-reply patterns.
+  Expert in [technology] for your project.
+  Deep knowledge of [specific areas].
 tools:
   - Read
   - Edit
@@ -189,9 +182,9 @@ tools:
   - WebFetch
 ---
 
-# NATS Expert
+# Your Expert
 
-Expert in NATS JetStream messaging.
+Expert in [technology] for your project.
 
 ## Core Knowledge
 [Technology fundamentals]
@@ -215,11 +208,8 @@ Skills are procedural workflows that guide Claude through multi-step tasks.
 | Skill | Purpose |
 |-------|---------|
 | `session-initializer` | Auto-load context on session start |
-| `pattern-library-manager` | Detection pattern management |
-| `git-commit-helper` | Conventional commits, no AI attribution |
-| `browser-extension-developer` | Chrome extension development |
 | `documentation-specialist` | README, API docs, changelogs |
-| `installation-orchestrator` | Installation troubleshooting |
+| `git-commit-helper` | Conventional commits, no AI attribution |
 
 ### Skills vs Agents
 
@@ -228,7 +218,7 @@ Skills are procedural workflows that guide Claude through multi-step tasks.
 | Focus | Technology expertise | Procedure/workflow |
 | Knowledge | Deep domain knowledge | Step-by-step instructions |
 | Invocation | `/expert [query]` | `/skill [name]` |
-| Example | "How to configure NATS?" | "Run TDD workflow" |
+| Example | "How to configure auth?" | "Run TDD workflow" |
 
 ---
 
@@ -254,8 +244,8 @@ memory/
 ### Usage
 
 ```
-/remember learning Always use parameterized queries for ClickHouse
-/remember decision Use NATS request-reply for Python services
+/remember learning Always use parameterized queries for the database
+/remember decision Use message queue for inter-service communication
 /remember preference Prefer explicit error handling over try-catch
 ```
 
@@ -263,10 +253,9 @@ memory/
 
 ```json
 {
-  "learnings": [
+  "entries": [
     {
-      "id": "learn-001",
-      "content": "Always use parameterized queries for ClickHouse",
+      "lesson": "Always use parameterized queries for the database",
       "category": "database",
       "timestamp": "2026-02-01T10:00:00Z"
     }
@@ -284,8 +273,16 @@ Python-based automation hooks in `.claude/hooks/`:
 |------|-------|---------|
 | `session-init.sh` | SessionStart | Load context, clean old caches (7d tsc-cache, 30d audit logs) |
 | `safety-validator.py` | PreToolUse | Block dangerous commands |
+| `audit-logger.py` | All events | Audit trail in JSONL format |
+| `auto-format.sh` | PostToolUse | Format files after Write/Edit |
+| `doc-update-reminder.py` | PostToolUse | Suggest doc updates after code changes |
+| `post-tool-use-tracker.py` | PostToolUse | Track modified files for TSC |
 | `memory-writer.py` | Stop | Persist learnings |
 | `co-modification-tracker.py` | Stop | Track files frequently edited together |
+| `tsc-check.sh` | Stop | TypeScript build check |
+| `self-check-reminder.sh` | Stop | Risky pattern analysis |
+| `notification-sound.sh` | Stop | Completion notification |
+| `pre-compact-flush.sh` | PreCompact | Flush learnings before compression |
 
 ### Safety Validator
 
@@ -295,7 +292,6 @@ Blocks dangerous patterns:
 BLOCKED_PATTERNS = [
     r'rm\s+-rf\s+/',           # rm -rf with absolute path
     r'git\s+push.*--force',    # Force push
-    r'docker\s+system\s+prune', # Docker prune
 ]
 ```
 
@@ -376,32 +372,30 @@ The system reads triggers from description and routes appropriate queries.
 cp -r vigil-code/.claude /your/project/
 ```
 
-### Step 2: Remove Unneeded Experts
+### Step 2: Add Your Own Experts
+
+Create experts for technologies your project uses:
 
 ```bash
-# If you don't use ClickHouse
-rm -rf .claude/agents/clickhouse-expert
+mkdir -p .claude/agents/my-database-expert
+# Create AGENT.md with domain knowledge
 ```
 
-### Step 3: Add Your Own Experts
+### Step 3: Customize Skills
 
-For technologies specific to your project.
-
-### Step 4: Customize Skills
+Add or remove skills as needed:
 
 ```bash
-# Remove project-specific skills
-rm -rf .claude/skills/pattern-library-manager
-
 # Add your own
 mkdir .claude/skills/my-workflow
+# Create SKILL.md with procedures
 ```
 
-### Step 5: Create CLAUDE.md
+### Step 4: Create CLAUDE.md
 
 Use the template in `CLAUDE.md` and customize for your project.
 
-### Step 6: Update .gitignore
+### Step 5: Update .gitignore
 
 ```gitignore
 # Agent state (runtime)
@@ -413,44 +407,11 @@ Use the template in `CLAUDE.md` and customize for your project.
 
 ---
 
-## Migration from v3.x
-
-| v3.x | v4.1 |
-|------|------|
-| `/expert` with orchestrator | Direct expert invocation |
-| 17 technology experts | 7 consolidated experts |
-| 22 skills | 6 essential skills |
-| TypeScript hooks | Python hooks (zero deps) |
-| Manual token tracking | Claude 4.5 automatic |
-| OODA protocol in every agent | Simplified reasoning |
-
-### Breaking Changes
-
-- `orchestrator` agent removed
-- `react-expert` → Frontend Conventions in CLAUDE.md
-- `vitest-expert` → `testing-expert`
-- `presidio-expert` → `python-expert`
-- `kubernetes-expert` → `docker-expert`
-- `redis-expert` → `express-expert`
-- `helm-expert`, `git-expert` → removed
-
-### Removed Agents
-
-- orchestrator → Claude Code handles routing natively
-- code-audit-expert → merged into security-expert
-- error-debugger → generic, not needed
-- performance-profiler → generic, not needed
-- refactor-planner → generic, not needed
-
----
-
 ## Reference Files
 
 | File | Description |
 |------|-------------|
 | [.claude/README.md](.claude/README.md) | Agent system documentation |
-| [.claude/core/protocols.md](.claude/core/protocols.md) | Essential protocols |
-| [.claude/core/tool-schema.md](.claude/core/tool-schema.md) | Tool patterns |
 | [CLAUDE.md](CLAUDE.md) | Project template |
 
 ---
@@ -464,6 +425,6 @@ Copyright (c) 2025-2026 Tomasz Bartel
 ---
 
 **Status:** Production Ready
-**Version:** 4.1.1
+**Version:** 4.2.0
 **Based on:** Anthropic Context Engineering Best Practices (2025-2026)
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-10

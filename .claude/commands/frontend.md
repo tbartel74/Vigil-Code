@@ -81,11 +81,9 @@ pnpm build
 ## Related Agents
 
 - **backend** - API endpoints
-- **patterns** - Configuration UI
 
 ## Related Skills
 
-- react-tailwind-ui - Full frontend guidance
-- express-api-developer - API integration
+- documentation-specialist - Documentation guidance
 
 Ready for frontend work!

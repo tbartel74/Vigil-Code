@@ -95,9 +95,9 @@ app.use(helmet.contentSecurityPolicy({
 
 ### 5-10. Additional Protections
 - **Security Misconfiguration**: Secrets in .env, CORS restrictive
-- **Vulnerable Components**: `pnpm audit`, Docker image scanning
+- **Vulnerable Components**: `pnpm audit`, dependency scanning
 - **Authentication Failures**: Rate limiting, JWT expiration
-- **Software Integrity**: Docker SHA256 digests, config versioning
+- **Software Integrity**: Artifact integrity verification, config versioning
 - **Logging Failures**: Audit logging, no sensitive data in logs
 - **SSRF**: URL allowlist for internal services
 
@@ -196,26 +196,26 @@ SECRETS_FOUND=$(jq length /tmp/secrets.json)
 ### Rate Limiting
 
 ```typescript
-import rateLimit from 'express-rate-limit';
+// Rate limiting configuration (adapt to your framework)
 
 // Auth endpoints (strict)
-const authLimiter = rateLimit({
+const authLimiterConfig = {
   windowMs: 15 * 60 * 1000,  // 15 minutes
   max: 5,                     // 5 attempts
   skipSuccessfulRequests: true
-});
+};
 
 // General API
-const apiLimiter = rateLimit({
+const apiLimiterConfig = {
   windowMs: 60 * 1000,  // 1 minute
   max: 100
-});
+};
 
-// Detection API
-const detectionLimiter = rateLimit({
+// Sensitive endpoints
+const sensitiveLimiterConfig = {
   windowMs: 60 * 1000,
   max: 30
-});
+};
 ```
 
 ### ReDoS Protection

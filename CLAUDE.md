@@ -56,21 +56,18 @@ This file provides guidance to Claude Code when working with your project.
 
 ---
 
-## Agent System v4.1
+## Agent System v4.2
 
 > **Philosophy:** Skills = HOW (procedures), Agents = WHO (technology expertise)
 
-### Technology Experts (7)
+### Technology Experts (2 examples)
 
 | Expert | Use For |
 |--------|---------|
-| `nats-expert` | JetStream, streams, consumers, KV store |
 | `security-expert` | OWASP, vulnerabilities, audits |
-| `express-expert` | API, middleware, JWT auth |
 | `testing-expert` | Vitest, TDD, fixtures, mocking |
-| `clickhouse-expert` | Analytics, SQL queries |
-| `docker-expert` | Containers, compose, orchestration |
-| `python-expert` | Flask, FastAPI, Presidio PII |
+
+Add your own experts for any technology your project uses.
 
 ### Memory System
 
@@ -156,13 +153,12 @@ pnpm lint             # Lint code
 
 ```
 [YOUR PROJECT]/
-├── .claude/              # Agent System v4.1
-│   ├── agents/           # Technology experts (7)
+├── .claude/              # Agent System v4.2
+│   ├── agents/           # Technology experts (2 examples + your own)
 │   ├── skills/           # Procedural skills
 │   ├── commands/         # Slash commands
 │   ├── hooks/            # Automation hooks
 │   ├── memory/           # Cross-session persistence
-│   ├── core/             # Protocols
 │   └── state/            # Session state
 ├── src/                  # [YOUR PROJECT] Source code
 ├── tests/                # [YOUR PROJECT] Tests
@@ -197,5 +193,5 @@ pnpm lint             # Lint code
 
 ---
 
-**Last Updated:** 2026-02-01
-**Version:** 4.1.0 (Agent System v4.1)
+**Last Updated:** 2026-02-10
+**Version:** 4.2.0 (Agent System v4.2)

@@ -24,7 +24,7 @@ Save learnings, decisions, or preferences to cross-session memory.
 
 ```
 /remember learning Always use parameterized queries for the database
-/remember learning Redis consumers need explicit ack --category infrastructure
+/remember learning Message consumers need explicit ack --category infrastructure
 /remember decision Use request-reply for sync service calls --rationale Lower latency than HTTP
 /remember preference commit_style conventional
 ```
@@ -58,7 +58,6 @@ Common categories for learnings:
 - `performance`
 - `architecture`
 - `infrastructure`
-- `docker`
 - `testing`
 - `documentation`
 

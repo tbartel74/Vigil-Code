@@ -32,7 +32,7 @@ Examples:
 ```
 /documentation api
 ```
-Generate docs/API.md from Express routes with OpenAPI spec.
+Generate docs/API.md from API route definitions.
 
 ### Full Documentation Suite
 ```
@@ -54,7 +54,7 @@ Validate and synchronize documentation with code changes.
 ## Example Tasks
 
 - "Generate README for my-worker service"
-- "Create API documentation from Express routes"
+- "Create API documentation from route definitions"
 - "Generate user guide for configuration"
 - "Update changelog with recent commits"
 - "Audit documentation for outdated content"

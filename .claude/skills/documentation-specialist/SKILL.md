@@ -10,7 +10,7 @@ Complete documentation management for enterprise projects. Handles README genera
 ## When to Use This Skill
 
 - Creating README for a new project/service
-- Generating API documentation from Express routes
+- Generating API documentation from route definitions
 - Updating documentation after code changes
 - Synchronizing version numbers across files
 - Creating user guides and technical documentation
@@ -27,7 +27,7 @@ docs/
 ├── ARCHITECTURE.md            # System architecture
 ├── CONFIGURATION.md           # Environment variables
 ├── AUTHENTICATION.md          # Auth & RBAC guide
-├── DOCKER.md                  # Container setup
+├── DEPLOYMENT.md              # Deployment setup
 ├── TROUBLESHOOTING.md         # Common issues
 ├── api/
 │   └── openapi.yaml           # OpenAPI spec

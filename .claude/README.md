@@ -220,7 +220,7 @@ Cross-session learning with automatic persistence:
 /expert How do I configure rate limiting?
 
 Invoking: security-expert
-Use express-rate-limit with sliding window...
+Use a rate limiting middleware with sliding window...
 ```
 
 ### Direct Expert Selection
